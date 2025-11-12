@@ -1,0 +1,98 @@
+﻿@model List<Tichu.Models.GameRoom>
+@{
+    ViewData["Title"] = "티츄 로비";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>🃏 Tichu Lobby</h3>
+        <div class="btn-wrap">
+            <a href="/Lobby/Create" class="btn btn-primary">로그인</a>
+            <a href="/Lobby/Create" class="btn btn-primary">방 만들기</a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>방 이름</th>
+                    <th>목표 점수</th>
+                    <th>턴 시간</th>
+                    <th>인원</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var room in Model)
+                {
+                    <tr>
+                        <td>@room.Name</td>
+                        <td>@room.TargetScore 점</td>
+                        <td>@room.TurnTimeLimit 초</td>
+                        <td>@room.Players.Count / 4</td>
+                    </tr>
+                }
+                <tr>
+                    <td>room.Name</td>
+                    <td>room.TargetScore 점</td>
+                    <td>room.TurnTimeLimit 초</td>
+                    <td>room.Players.Count / 4</td>
+                </tr>
+                <tr>
+                    <td>room.Name</td>
+                    <td>room.TargetScore 점</td>
+                    <td>room.TurnTimeLimit 초</td>
+                    <td>room.Players.Count / 4</td>
+                </tr>
+                <tr>
+                    <td>room.Name</td>
+                    <td>room.TargetScore 점</td>
+                    <td>room.TurnTimeLimit 초</td>
+                    <td>room.Players.Count / 4</td>
+                </tr>
+                <tr>
+                    <td>room.Name</td>
+                    <td>room.TargetScore 점</td>
+                    <td>room.TurnTimeLimit 초</td>
+                    <td>room.Players.Count / 4</td>
+                </tr>
+                <tr>
+                    <td>room.Name</td>
+                    <td>room.TargetScore 점</td>
+                    <td>room.TurnTimeLimit 초</td>
+                    <td>room.Players.Count / 4</td>
+                </tr>
+                <tr>
+                    <td>room.Name</td>
+                    <td>room.TargetScore 점</td>
+                    <td>room.TurnTimeLimit 초</td>
+                    <td>room.Players.Count / 4</td>
+                </tr>
+                <tr>
+                    <td>room.Name</td>
+                    <td>room.TargetScore 점</td>
+                    <td>room.TurnTimeLimit 초</td>
+                    <td>room.Players.Count / 4</td>
+                </tr>
+                <tr>
+                    <td>room.Name</td>
+                    <td>room.TargetScore 점</td>
+                    <td>room.TurnTimeLimit 초</td>
+                    <td>room.Players.Count / 4</td>
+                </tr>
+                <tr>
+                    <td>room.Name</td>
+                    <td>room.TargetScore 점</td>
+                    <td>room.TurnTimeLimit 초</td>
+                    <td>room.Players.Count / 4</td>
+                </tr>
+                <tr>
+                    <td>room.Name</td>
+                    <td>room.TargetScore 점</td>
+                    <td>room.TurnTimeLimit 초</td>
+                    <td>room.Players.Count / 4</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

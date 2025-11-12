@@ -1,0 +1,30 @@
+﻿@model Tichu.Models.GameRoom
+@{
+    ViewData["Title"] = "방 생성";
+}
+
+<div class="container mt-4">
+    <h3>방 생성</h3>
+    <form method="post" asp-action="Create">
+        <div class="mb-3">
+            <label class="form-label">방 이름</label>
+            <input asp-for="Name" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">목표 점수</label>
+            <select asp-for="TargetScore" class="form-select">
+                <option value="500">500점</option>
+                <option value="1000" selected>1000점</option>
+                <option value="2000">2000점</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">턴 시간 (초)</label>
+            <input asp-for="TurnTimeLimit" type="number" class="form-control" min="10" max="120" />
+        </div>
+
+        <button type="submit" class="btn btn-success">생성</button>
+    </form>
+</div>
