@@ -1,30 +1,466 @@
-﻿@model Tichu.Models.GameRoom
+@model Tichu.Models.ViewModels.GamePlayViewModel
 @{
-    ViewData["Title"] = "방 생성";
+    ViewData["Title"] = Model.RoomName;
+    Layout = "_Layout";
 }
 
-<div class="container mt-4">
-    <h3>방 생성</h3>
-    <form method="post" asp-action="Create">
-        <div class="mb-3">
-            <label class="form-label">방 이름</label>
-            <input asp-for="Name" class="form-control" />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">목표 점수</label>
-            <select asp-for="TargetScore" class="form-select">
-                <option value="500">500점</option>
-                <option value="1000" selected>1000점</option>
-                <option value="2000">2000점</option>
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">턴 시간 (초)</label>
-            <input asp-for="TurnTimeLimit" type="number" class="form-control" min="10" max="120" />
-        </div>
-
-        <button type="submit" class="btn btn-success">생성</button>
-    </form>
+<div class="container-fluid py-3" style="max-width: 1100px;">
+    <div id="app">
+        <div class="text-center text-muted py-5">서버에 연결하는 중...</div>
+    </div>
 </div>
+
+<div id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
+
+<style>
+    .tichu-card {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 46px; height: 64px; padding: 4px 6px;
+        border: 1px solid #bbb; border-radius: 8px; background: #fff;
+        font-weight: 600; font-size: 0.85rem; cursor: pointer; user-select: none;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    }
+    .tichu-card.selected { border-color: #0d6efd; background: #e7f1ff; transform: translateY(-6px); }
+    .tichu-card.disabled { cursor: default; opacity: 0.55; }
+    .text-danger.tichu-card, .tichu-card .text-danger { color: #dc3545; }
+
+    .table-layout {
+        display: grid;
+        grid-template-columns: 1fr 2fr 1fr;
+        grid-template-rows: auto auto auto;
+        grid-template-areas: "top top top" "left center right" "bottom bottom bottom";
+        gap: 10px;
+    }
+    .area-top { grid-area: top; }
+    .area-left { grid-area: left; }
+    .area-right { grid-area: right; }
+    .area-center { grid-area: center; }
+    .area-bottom { grid-area: bottom; }
+
+    .player-slot { border: 1px solid #ddd; border-radius: 8px; padding: 8px; text-align: center; background: #fafafa; }
+    .player-slot.active-turn { border-color: #198754; box-shadow: 0 0 0 2px rgba(25,135,84,0.25); }
+    .player-slot.disconnected { opacity: 0.5; }
+
+    .exchange-slot {
+        min-height: 70px; border: 2px dashed #ccc; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center; cursor: pointer; color: #999;
+    }
+    .exchange-slot:not(.empty) { border-style: solid; border-color: #0d6efd; }
+
+    #toasts { position: fixed; bottom: 16px; right: 16px; z-index: 2000; display: flex; flex-direction: column; gap: 6px; }
+    .toast-msg { background: #212529; color: #fff; padding: 8px 14px; border-radius: 6px; font-size: 0.85rem; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+</style>
+
+<script>
+    const ROOM_ID = @Model.RoomId;
+    const USER_ID = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.UserId));
+    const NICKNAME = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Nickname));
+    const IS_HOST = @Html.Raw(Model.IsHost ? "true" : "false");
+
+    let state = null;
+    let chatLog = [];
+    let selectedCardIds = new Set();
+    let exchangeAssign = {};       // cardId -> toSeat
+    let exchangeSelectedCard = null;
+    let lastTurnSignature = null;
+    let timerInterval = null;
+
+    // ---------- utils ----------
+    function escapeHtml(s) {
+        const div = document.createElement('div');
+        div.textContent = s ?? '';
+        return div.innerHTML;
+    }
+    function suitSymbol(suit) { return { S: '♠', H: '♥', C: '♣', D: '♦' }[suit] || ''; }
+    function suitColorClass(suit) { return (suit === 'H' || suit === 'D') ? 'text-danger' : 'text-dark'; }
+    function specialLabel(rank) { return { Dragon: '🐉드래곤', Phoenix: '🔥불사조', Dog: '🐶도그', Mahjong: '🀄마작' }[rank] || rank; }
+    function cardLabel(card) {
+        return card.suit === 'Special' ? specialLabel(card.rank) : `${card.rank}${suitSymbol(card.suit)}`;
+    }
+    function renderCard(card, opts = {}) {
+        const cls = ['tichu-card'];
+        if (card.suit !== 'Special') cls.push(suitColorClass(card.suit));
+        if (opts.selected) cls.push('selected');
+        if (opts.disabled) cls.push('disabled');
+        const click = (opts.onClick && !opts.disabled) ? `onclick="${opts.onClick}"` : '';
+        return `<div class="${cls.join(' ')}" ${click} data-card-id="${card.id}">${cardLabel(card)}</div>`;
+    }
+    function showToast(msg) {
+        const el = document.createElement('div');
+        el.className = 'toast-msg';
+        el.textContent = msg;
+        document.getElementById('toasts').appendChild(el);
+        setTimeout(() => el.remove(), 3500);
+    }
+
+    // ---------- SignalR ----------
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/tichuHub")
+        .withAutomaticReconnect()
+        .build();
+
+    connection.on("RoomState", s => {
+        state = s;
+        render();
+        const sig = `${s.phase}:${s.currentTurnSeat}:${s.dragonTrickPending}:${s.lastPlayerSeat}:${(s.lastPlay || []).length}:${s.roundNumber}:${s.status}`;
+        if (sig !== lastTurnSignature) {
+            lastTurnSignature = sig;
+            restartTurnTimer();
+        }
+    });
+    connection.on("ChatMessage", (nick, text) => { chatLog.push({ nick, text }); render(); });
+    connection.on("ErrorMessage", showToast);
+
+    async function start() {
+        try {
+            await connection.start();
+            await connection.invoke("JoinRoom", ROOM_ID, USER_ID, NICKNAME);
+        } catch (e) {
+            console.error(e);
+            setTimeout(start, 2000);
+        }
+    }
+    connection.onreconnected(() => connection.invoke("JoinRoom", ROOM_ID, USER_ID, NICKNAME).catch(console.error));
+    start();
+
+    // ---------- actions ----------
+    function toggleReady() { connection.invoke('ToggleReady', ROOM_ID, USER_ID).catch(console.error); }
+    function startGame() { connection.invoke('StartGame', ROOM_ID, USER_ID).catch(console.error); }
+    function leaveRoom() { connection.invoke('LeaveRoom', ROOM_ID, USER_ID).finally(() => window.location.href = '/Lobby'); }
+    function callTichu() { connection.invoke('CallTichu', ROOM_ID, USER_ID).catch(console.error); }
+
+    function selectExchangeCard(id) { exchangeSelectedCard = (exchangeSelectedCard === id) ? null : id; render(); }
+    function assignSelectedTo(seat) {
+        if (exchangeSelectedCard == null) return;
+        for (const k of Object.keys(exchangeAssign)) if (exchangeAssign[k] === seat) delete exchangeAssign[k];
+        exchangeAssign[exchangeSelectedCard] = seat;
+        exchangeSelectedCard = null;
+        render();
+    }
+    function unassignExchange(cardId) { delete exchangeAssign[cardId]; render(); }
+    function submitExchange() {
+        const picks = Object.keys(exchangeAssign).map(cid => ({ cardId: Number(cid), toSeat: exchangeAssign[cid] }));
+        connection.invoke('SubmitExchange', ROOM_ID, USER_ID, picks)
+            .then(() => { exchangeAssign = {}; })
+            .catch(console.error);
+    }
+
+    function toggleCardSelect(id) {
+        if (selectedCardIds.has(id)) selectedCardIds.delete(id); else selectedCardIds.add(id);
+        render();
+    }
+    function clearSelection() { selectedCardIds.clear(); render(); }
+    function playSelected() {
+        const ids = [...selectedCardIds];
+        connection.invoke('PlayCards', ROOM_ID, USER_ID, ids)
+            .then(() => { selectedCardIds.clear(); })
+            .catch(console.error);
+    }
+    function passTurn() { connection.invoke('Pass', ROOM_ID, USER_ID).catch(console.error); }
+    function giveDragon(seat) { connection.invoke('GiveDragonTrick', ROOM_ID, USER_ID, seat).catch(console.error); }
+    function startNextRound() { connection.invoke('StartNextRound', ROOM_ID, USER_ID).catch(console.error); }
+    function sendChat() {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (!text) return;
+        connection.invoke('SendChat', ROOM_ID, USER_ID, text).catch(console.error);
+        input.value = '';
+    }
+
+    // ---------- turn timer (visual only, server enforces the real timeout) ----------
+    function restartTurnTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        const bar = document.getElementById('turnBar');
+        if (!state || state.status !== 'Playing' || state.phase !== 'Playing' || state.dragonTrickPending) {
+            return;
+        }
+        let remain = state.turnTimeLimit;
+        if (bar) bar.style.width = '100%';
+        timerInterval = setInterval(() => {
+            remain--;
+            const b = document.getElementById('turnBar');
+            if (b) b.style.width = Math.max(0, (remain / state.turnTimeLimit) * 100) + '%';
+            if (remain <= 0) clearInterval(timerInterval);
+        }, 1000);
+    }
+
+    // ---------- render ----------
+    function render() {
+        const app = document.getElementById('app');
+        if (!state) return;
+
+        let body;
+        if (state.status === 'Waiting') body = renderWaitingRoom();
+        else if (state.status === 'Playing') {
+            if (state.phase === 'Exchange') body = renderExchange();
+            else if (state.phase === 'Playing') body = renderGameTable();
+            else body = renderRoundEnd();
+        } else body = renderGameEnd();
+
+        const teamA = state.teamScores ? state.teamScores[0] : 0;
+        const teamB = state.teamScores ? state.teamScores[1] : 0;
+
+        app.innerHTML = `
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+                <h5 class="m-0">🃏 ${escapeHtml(state.roomName)} <span class="text-muted small">#${state.roomId}</span></h5>
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    <span class="badge text-bg-secondary">목표 ${state.targetScore}점</span>
+                    <span class="badge text-bg-info">A팀 ${teamA} : ${teamB} B팀</span>
+                    <span class="badge text-bg-light text-dark border">나: ${escapeHtml(NICKNAME)}</span>
+                    <button class="btn btn-sm btn-outline-danger" onclick="leaveRoom()">나가기</button>
+                </div>
+            </div>
+            ${state.lastMessage ? `<div class="alert alert-light border py-2 small mb-2">${escapeHtml(state.lastMessage)}</div>` : ''}
+            ${body}
+            ${renderChatPanel()}
+        `;
+
+        const cb = document.getElementById('chatBox');
+        if (cb) cb.scrollTop = cb.scrollHeight;
+    }
+
+    function renderChatPanel() {
+        return `<div class="card mt-3">
+            <div class="card-header py-2">채팅 / 로그</div>
+            <div class="card-body p-2">
+                <div id="chatBox" class="small mb-2" style="height:130px; overflow-y:auto;">
+                    ${chatLog.map(m => `<div><strong>${escapeHtml(m.nick)}:</strong> ${escapeHtml(m.text)}</div>`).join('')}
+                </div>
+                <div class="input-group input-group-sm">
+                    <input id="chatInput" type="text" class="form-control" placeholder="메시지 입력 후 Enter"
+                           onkeydown="if(event.key==='Enter'){sendChat();}" />
+                    <button class="btn btn-outline-primary" onclick="sendChat()">전송</button>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    function renderWaitingRoom() {
+        const seats = [0, 1, 2, 3].map(s => {
+            const p = state.players.find(pl => pl.seat === s);
+            const team = s % 2 === 0 ? 'A팀' : 'B팀';
+            if (!p) {
+                return `<div class="col-6 col-md-3"><div class="border rounded p-3 text-center text-muted">빈 자리 (좌석 ${s + 1})</div></div>`;
+            }
+            return `<div class="col-6 col-md-3">
+                <div class="border rounded p-3 text-center ${p.userId === USER_ID ? 'border-primary border-2' : ''}">
+                    <div class="fw-bold">${escapeHtml(p.nickname)} ${p.isHost ? '👑' : ''}</div>
+                    <div class="small text-muted">${team} · 좌석 ${s + 1}</div>
+                    <span class="badge ${p.isReady ? 'text-bg-success' : 'text-bg-secondary'} mt-1">${p.isReady ? '준비완료' : '대기중'}</span>
+                </div>
+            </div>`;
+        }).join('');
+
+        const me = state.players.find(p => p.userId === USER_ID);
+        const allReady = state.players.length === 4 && state.players.every(p => p.isReady);
+
+        return `<div class="card">
+            <div class="card-body">
+                <h5>대기실 (${state.players.length}/4)</h5>
+                <div class="row g-2 my-3">${seats}</div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" onclick="toggleReady()">${me && me.isReady ? '준비 해제' : '준비하기'}</button>
+                    ${IS_HOST ? `<button class="btn btn-success" ${allReady ? '' : 'disabled'} onclick="startGame()">게임 시작</button>` : ''}
+                </div>
+                ${!allReady ? '<div class="text-muted small mt-2">4명이 모두 입장하고 준비를 완료해야 시작할 수 있습니다. (0,2번 좌석 = A팀, 1,3번 좌석 = B팀)</div>' : ''}
+            </div>
+        </div>`;
+    }
+
+    function renderExchange() {
+        const mySeat = state.mySeat;
+        const submitted = state.exchangeSubmittedSeats.includes(mySeat);
+        const me = state.players.find(p => p.userId === USER_ID);
+
+        const tichuBtn = !me?.calledTichu
+            ? `<button class="btn btn-outline-danger btn-sm" onclick="callTichu()">티츄 부르기</button>`
+            : `<span class="badge text-bg-danger align-self-center">티츄 콜!</span>`;
+
+        if (submitted) {
+            const handHtml = state.myHand.map(c => renderCard(c, { disabled: true })).join('');
+            return `<div class="card">
+                <div class="card-body">
+                    <h5>카드 교환</h5>
+                    <p class="text-muted">교환 카드를 제출했습니다. 다른 플레이어를 기다리는 중... (${state.exchangeSubmittedSeats.length}/4)</p>
+                    <div class="mb-2">${tichuBtn}</div>
+                    <h6 class="mt-3">내 손패</h6>
+                    <div class="d-flex flex-wrap gap-2">${handHtml}</div>
+                </div>
+            </div>`;
+        }
+
+        const targets = [
+            { seat: (mySeat + 1) % 4, label: '왼쪽' },
+            { seat: (mySeat + 2) % 4, label: '파트너' },
+            { seat: (mySeat + 3) % 4, label: '오른쪽' }
+        ];
+        const assignedIds = Object.keys(exchangeAssign).map(Number);
+
+        const targetBoxes = targets.map(t => {
+            const cardIdStr = Object.keys(exchangeAssign).find(cid => exchangeAssign[cid] === t.seat);
+            const card = cardIdStr ? state.myHand.find(c => c.id === Number(cardIdStr)) : null;
+            const p = state.players.find(pl => pl.seat === t.seat);
+            return `<div class="col-4 text-center">
+                <div class="small text-muted mb-1">${t.label} (${p ? escapeHtml(p.nickname) : '-'})</div>
+                <div class="exchange-slot ${!card ? 'empty' : ''}"
+                     onclick="${card ? `unassignExchange(${card.id})` : `assignSelectedTo(${t.seat})`}">
+                    ${card ? renderCard(card) : '탭하여 배정'}
+                </div>
+            </div>`;
+        }).join('');
+
+        const handCards = state.myHand.filter(c => !assignedIds.includes(c.id));
+        const handHtml = handCards.map(c => renderCard(c, {
+            selected: exchangeSelectedCard === c.id,
+            onClick: `selectExchangeCard(${c.id})`
+        })).join('');
+
+        const readyToSubmit = assignedIds.length === 3;
+
+        return `<div class="card mb-3">
+            <div class="card-body">
+                <h5>카드 교환</h5>
+                <p class="text-muted small mb-2">카드를 하나 선택한 뒤, 보낼 대상을 눌러 배정하세요. 3장을 모두 배정하면 제출할 수 있습니다.</p>
+                <div class="row mb-3">${targetBoxes}</div>
+                <div class="d-flex gap-2 mb-2">
+                    <button class="btn btn-success" ${readyToSubmit ? '' : 'disabled'} onclick="submitExchange()">교환 제출</button>
+                    ${tichuBtn}
+                </div>
+                <div class="small text-muted">제출 완료: ${state.exchangeSubmittedSeats.length} / 4</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h6>내 손패 (${handCards.length}장 남음 / 전체 ${state.myHand.length}장)</h6>
+                <div class="d-flex flex-wrap gap-2">${handHtml}</div>
+            </div>
+        </div>`;
+    }
+
+    function playerSlotHtml(seat, areaClass) {
+        const p = state.players.find(pl => pl.seat === seat);
+        if (!p) return `<div class="${areaClass}"><div class="player-slot text-muted">빈 자리</div></div>`;
+        const isTurn = state.currentTurnSeat === seat && !state.dragonTrickPending;
+        const cls = ['player-slot'];
+        if (isTurn) cls.push('active-turn');
+        if (!p.isConnected) cls.push('disconnected');
+        return `<div class="${areaClass}">
+            <div class="${cls.join(' ')}">
+                <div class="fw-bold">${escapeHtml(p.nickname)} ${p.isHost ? '👑' : ''} ${p.calledTichu ? '❗' : ''}</div>
+                <div class="small text-muted">${p.hasFinished ? `완료 · ${p.finishPosition + 1}등` : `${p.handCount}장`}</div>
+                ${isTurn ? '<div class="small text-success fw-bold">차례</div>' : ''}
+            </div>
+        </div>`;
+    }
+
+    function renderGameTable() {
+        const mySeat = state.mySeat;
+        const topSeat = (mySeat + 2) % 4;
+        const rightSeat = (mySeat + 1) % 4;
+        const leftSeat = (mySeat + 3) % 4;
+
+        const me = state.players.find(p => p.userId === USER_ID);
+        const myTurn = state.currentTurnSeat === mySeat && !state.dragonTrickPending && !me?.hasFinished;
+        const finished = !!me?.hasFinished;
+
+        const lastPlayHtml = state.lastPlay.length
+            ? state.lastPlay.map(c => renderCard(c)).join('')
+            : '<span class="text-muted small">비어있음 (자유롭게 리드)</span>';
+        const lastPlayerName = state.lastPlayerSeat != null
+            ? (state.players.find(p => p.seat === state.lastPlayerSeat)?.nickname ?? '')
+            : '';
+
+        let dragonPanel = '';
+        if (state.dragonTrickPending) {
+            if (state.lastPlayerSeat === mySeat) {
+                const opp1 = (mySeat + 1) % 4, opp2 = (mySeat + 3) % 4;
+                const p1 = state.players.find(p => p.seat === opp1);
+                const p2 = state.players.find(p => p.seat === opp2);
+                dragonPanel = `<div class="alert alert-warning">
+                    🐉 드래곤으로 트릭을 가져왔습니다! 상대팀에게 카드를 넘겨주세요.
+                    <div class="d-flex gap-2 mt-2">
+                        <button class="btn btn-sm btn-outline-dark" onclick="giveDragon(${opp1})">${escapeHtml(p1?.nickname ?? '')}에게</button>
+                        <button class="btn btn-sm btn-outline-dark" onclick="giveDragon(${opp2})">${escapeHtml(p2?.nickname ?? '')}에게</button>
+                    </div>
+                </div>`;
+            } else {
+                dragonPanel = `<div class="alert alert-warning small">${escapeHtml(lastPlayerName)}님이 드래곤 트릭을 넘겨줄 상대를 고르는 중...</div>`;
+            }
+        }
+
+        const handHtml = state.myHand.map(c => renderCard(c, {
+            selected: selectedCardIds.has(c.id),
+            onClick: `toggleCardSelect(${c.id})`,
+            disabled: finished
+        })).join('');
+
+        const tichuBtn = (!me?.calledTichu && state.myHand.length === 14 && !finished)
+            ? `<button class="btn btn-outline-danger btn-sm" onclick="callTichu()">티츄 부르기</button>` : '';
+
+        return `
+        <div class="card mb-2">
+            <div class="card-body p-2">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small text-muted">라운드 ${state.roundNumber}</span>
+                    <div class="progress" style="width:50%; height:8px;">
+                        <div id="turnBar" class="progress-bar bg-success" style="width:100%"></div>
+                    </div>
+                </div>
+                ${dragonPanel}
+                <div class="table-layout">
+                    ${playerSlotHtml(topSeat, 'area-top')}
+                    ${playerSlotHtml(leftSeat, 'area-left')}
+                    <div class="area-center text-center">
+                        <div class="small text-muted mb-1">${lastPlayerName ? `이전 패 (${escapeHtml(lastPlayerName)})` : '이전 패'}</div>
+                        <div class="d-flex flex-wrap justify-content-center gap-1">${lastPlayHtml}</div>
+                    </div>
+                    ${playerSlotHtml(rightSeat, 'area-right')}
+                    ${playerSlotHtml(mySeat, 'area-bottom')}
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="m-0">내 손패 (${state.myHand.length}장)</h6>
+                    <div class="d-flex gap-2">
+                        ${tichuBtn}
+                        <button class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">선택 해제</button>
+                        <button class="btn btn-sm btn-success" ${myTurn && selectedCardIds.size > 0 ? '' : 'disabled'} onclick="playSelected()">내기</button>
+                        <button class="btn btn-sm btn-outline-dark" ${myTurn && state.lastPlay.length > 0 ? '' : 'disabled'} onclick="passTurn()">패스</button>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2">${finished ? '<span class="text-muted">이번 라운드를 마쳤습니다. 결과를 기다려주세요.</span>' : handHtml}</div>
+                ${!myTurn && !finished ? '<div class="text-muted small mt-2">다른 플레이어의 차례입니다.</div>' : ''}
+            </div>
+        </div>`;
+    }
+
+    function renderRoundEnd() {
+        const last = state.history[state.history.length - 1];
+        return `<div class="card">
+            <div class="card-body">
+                <h5>라운드 ${state.roundNumber} 종료</h5>
+                ${last ? `<p>${escapeHtml(last.note)}</p><p class="small text-muted">이번 라운드: A팀 ${last.team0Gain >= 0 ? '+' : ''}${last.team0Gain}점 / B팀 ${last.team1Gain >= 0 ? '+' : ''}${last.team1Gain}점</p>` : ''}
+                <p class="fw-bold">현재 누적 점수 — A팀 ${state.teamScores[0]} : ${state.teamScores[1]} B팀 (목표 ${state.targetScore}점)</p>
+                ${IS_HOST
+                    ? `<button class="btn btn-primary" onclick="startNextRound()">다음 라운드 시작</button>`
+                    : `<div class="text-muted">호스트가 다음 라운드를 시작하길 기다리는 중...</div>`}
+            </div>
+        </div>`;
+    }
+
+    function renderGameEnd() {
+        const winner = state.teamScores[0] > state.teamScores[1] ? 'A팀 (좌석 0,2)' : (state.teamScores[1] > state.teamScores[0] ? 'B팀 (좌석 1,3)' : '무승부');
+        return `<div class="card">
+            <div class="card-body text-center">
+                <h4>🏆 게임 종료</h4>
+                <p class="fs-5">${winner} 승리!</p>
+                <p class="fw-bold">최종 점수 — A팀 ${state.teamScores[0]} : ${state.teamScores[1]} B팀</p>
+                <a href="/Lobby" class="btn btn-primary mt-2">로비로 돌아가기</a>
+            </div>
+        </div>`;
+    }
+</script>

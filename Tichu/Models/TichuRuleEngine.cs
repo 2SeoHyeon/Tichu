@@ -1,8 +1,8 @@
-﻿namespace Tichu.Models
+namespace Tichu.Models
 {
     public enum TichuComboType
     {
-        None, Single, Pair, Triple, FullHouse, Straight, BombFour, BombStraight
+        None, Single, Pair, Triple, FullHouse, PairSequence, Straight, BombFour, BombStraight
     }
 
     public class TichuRuleEngine
@@ -18,9 +18,10 @@
             if (cards.Count == 3 && cards.All(c => c.RankValue == cards[0].RankValue)) return TichuComboType.Triple;
             if (cards.Count == 4 && cards.All(c => c.RankValue == cards[0].RankValue)) return TichuComboType.BombFour;
 
-            if (IsFullHouse(cards)) return TichuComboType.FullHouse;
-            if (IsBombStraight(cards)) return TichuComboType.BombStraight; // (무늬 동일 + 연속)
-            if (IsStraight(cards)) return TichuComboType.Straight;
+            if (cards.Count == 5 && IsFullHouse(cards)) return TichuComboType.FullHouse;
+            if (cards.Count >= 5 && IsBombStraight(cards)) return TichuComboType.BombStraight; // 무늬 동일 + 연속
+            if (cards.Count >= 4 && cards.Count % 2 == 0 && IsPairSequence(cards)) return TichuComboType.PairSequence;
+            if (cards.Count >= 5 && IsStraight(cards)) return TichuComboType.Straight;
 
             return TichuComboType.None;
         }
@@ -30,8 +31,10 @@
             var curType = DetectCombo(current);
             var prevType = DetectCombo(previous);
 
+            if (curType == TichuComboType.None) return false;
+
             // 이전 패가 없으면 누구든 낼 수 있음
-            if (prevType == TichuComboType.None) return curType != TichuComboType.None;
+            if (prevType == TichuComboType.None) return true;
 
             // 같은 타입, 같은 장수만 비교 (폭탄은 예외 처리 아래)
             if (curType == prevType)
@@ -63,14 +66,15 @@
             return false;
         }
 
-        private static bool IsBomb(TichuComboType t)
+        public static bool IsBomb(TichuComboType t)
             => t == TichuComboType.BombFour || t == TichuComboType.BombStraight;
 
         private static int BombPriority(TichuComboType t)
             => t == TichuComboType.BombStraight ? 2 : (t == TichuComboType.BombFour ? 1 : 0);
 
         private bool IsStraight(List<Card> cards)
-            => cards.Zip(cards.Skip(1), (a, b) => b.RankValue - a.RankValue).All(d => d == 1);
+            => cards.All(c => !c.IsSpecial || c.Rank == "Mahjong")
+               && cards.Zip(cards.Skip(1), (a, b) => b.RankValue - a.RankValue).All(d => d == 1);
 
         private bool IsFullHouse(List<Card> cards)
         {
@@ -78,10 +82,20 @@
             return groups.Count == 2 && groups.Any(g => g.Count() == 3);
         }
 
+        private bool IsPairSequence(List<Card> cards)
+        {
+            var groups = cards.GroupBy(c => c.RankValue).OrderBy(g => g.Key).ToList();
+            if (groups.Any(g => g.Count() != 2)) return false;
+            if (groups.Any(g => cards.First(c => c.RankValue == g.Key).IsSpecial)) return false;
+
+            return groups.Zip(groups.Skip(1), (a, b) => b.Key - a.Key).All(d => d == 1);
+        }
+
         private bool IsBombStraight(List<Card> cards)
         {
             if (cards.Count < 5) return false;
             var suit = cards[0].Suit;
+            if (suit == "Special") return false;
             // 같은 무늬 + 연속
             return cards.All(c => c.Suit == suit) && IsStraight(cards);
         }

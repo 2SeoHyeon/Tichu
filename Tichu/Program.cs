@@ -1,5 +1,5 @@
-using Microsoft.EntityFrameworkCore;
 using Tichu.Hub;
+using Tichu.Models;
 using Tichu.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,9 +7,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 
-//builder.Services.AddScoped<RoomService>();
-//builder.Services.AddScoped<GameService>();
-//builder.Services.AddScoped<TimerService>();
+builder.Services.AddSingleton<RoomService>();
+builder.Services.AddSingleton<GameService>();
+builder.Services.AddSingleton<TichuRuleEngine>();
+builder.Services.AddSingleton<GameEngine>();
+builder.Services.AddSingleton<TimerService>();
+builder.Services.AddSingleton<RoomBroadcaster>();
+builder.Services.AddSingleton<TurnTimerCoordinator>();
 
 var app = builder.Build();
 
@@ -22,12 +26,10 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-app.UseAuthentication();
-app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Lobby}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapHub<TichuHub>("/tichuHub");
 

@@ -1,0 +1,27 @@
+@{
+    ViewData["Title"] = "티츄 시작하기";
+    Layout = "_Layout";
+}
+
+<div class="container d-flex align-items-center justify-content-center" style="min-height: 80vh;">
+    <div class="card shadow-sm" style="max-width: 420px; width: 100%;">
+        <div class="card-body p-4 text-center">
+            <h2 class="mb-1">🃏 Tichu</h2>
+            <p class="text-muted mb-4">닉네임만 입력하면 바로 시작할 수 있어요. 회원가입은 필요 없습니다.</p>
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger py-2">@ViewBag.Error</div>
+            }
+
+            <form method="post" asp-action="Enter" asp-controller="Home">
+                @Html.AntiForgeryToken()
+                <div class="mb-3 text-start">
+                    <label class="form-label">닉네임</label>
+                    <input name="nickname" class="form-control form-control-lg" maxlength="12" placeholder="닉네임을 입력하세요" autofocus required />
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg w-100">입장하기</button>
+            </form>
+        </div>
+    </div>
+</div>

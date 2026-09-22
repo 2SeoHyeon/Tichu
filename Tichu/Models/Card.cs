@@ -1,7 +1,10 @@
-﻿namespace Tichu.Models
+namespace Tichu.Models
 {
     public class Card
     {
+        /// <summary>
+        /// 카드 고유 ID (한 판의 덱 안에서 유일)
+        /// </summary>
         public int Id { get; set; }
 
         /// <summary>
@@ -37,9 +40,28 @@
                     "3" => 3,
                     "2" => 2,
                     "Mahjong" => 1,     // 마작은 제일 낮음
-                    "Phoenix" => 15,    // 불사조 (와일드카드)
+                    "Phoenix" => 15,    // 불사조 (와일드카드, 싱글로는 A보다 한 끗 위)
                     "Dragon" => 20,     // 드래곤 (최강)
                     "Dog" => 0,         // 개 (턴 넘김)
+                    _ => 0
+                };
+            }
+        }
+
+        /// <summary>
+        /// 트릭 점수 계산용 카드 값 (5=5점, 10/K=10점, 드래곤=25점, 불사조=-25점)
+        /// </summary>
+        public int ScoreValue
+        {
+            get
+            {
+                return Rank switch
+                {
+                    "5" => 5,
+                    "10" => 10,
+                    "K" => 10,
+                    "Dragon" => 25,
+                    "Phoenix" => -25,
                     _ => 0
                 };
             }

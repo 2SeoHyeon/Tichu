@@ -1,74 +1,54 @@
-﻿using Tichu.Models;
+using Tichu.Models;
 
 namespace Tichu.Services
 {
+    /// <summary>
+    /// 덱 생성/셔플/분배 유틸리티
+    /// </summary>
     public class GameService
     {
-        private readonly TichuRuleEngine _ruleEngine;
-
-        public GameService(TichuRuleEngine ruleEngine)
-        {
-            _ruleEngine = ruleEngine;
-        }
-
         /// <summary>
-        /// 새 카드 덱 생성 (52장 + 특수 4장)
+        /// 새 카드 덱 생성 (52장 + 특수 4장), 셔플까지 완료된 상태로 반환
         /// </summary>
-        public List<Card> CreateDeck()
+        public List<Card> CreateShuffledDeck()
         {
-            var suits = new[] { "♠", "♥", "♣", "♦" };
+            var suits = new[] { "S", "H", "C", "D" };
             var ranks = new[] { "A", "K", "Q", "J", "10", "9", "8", "7", "6", "5", "4", "3", "2" };
             var deck = new List<Card>();
+            int id = 1;
 
             foreach (var suit in suits)
             {
                 foreach (var rank in ranks)
                 {
-                    deck.Add(new Card { Suit = suit, Rank = rank });
+                    deck.Add(new Card { Id = id++, Suit = suit, Rank = rank });
                 }
             }
 
             // 특수 카드 추가
-            deck.Add(new Card { Suit = "Special", Rank = "Dragon" });
-            deck.Add(new Card { Suit = "Special", Rank = "Phoenix" });
-            deck.Add(new Card { Suit = "Special", Rank = "Dog" });
-            deck.Add(new Card { Suit = "Special", Rank = "Mahjong" });
+            deck.Add(new Card { Id = id++, Suit = "Special", Rank = "Dragon" });
+            deck.Add(new Card { Id = id++, Suit = "Special", Rank = "Phoenix" });
+            deck.Add(new Card { Id = id++, Suit = "Special", Rank = "Dog" });
+            deck.Add(new Card { Id = id++, Suit = "Special", Rank = "Mahjong" });
 
-            return deck;
-        }
-
-        /// <summary>
-        /// 카드 섞기
-        /// </summary>
-        public List<Card> Shuffle(List<Card> deck)
-        {
-            var rng = new Random();
+            var rng = Random.Shared;
             return deck.OrderBy(_ => rng.Next()).ToList();
         }
 
         /// <summary>
-        /// 플레이어에게 카드 나누기 (4인 기준) - 무조건 4인
+        /// 4인 기준으로 14장씩 나누기
         /// </summary>
-        public Dictionary<string, List<Card>> DealCards(List<Card> deck, List<Player> players)
+        public Dictionary<int, List<Card>> DealBySeat(List<Card> deck)
         {
-            var result = new Dictionary<string, List<Card>>();
-            int cardsPerPlayer = deck.Count / players.Count;
+            var result = new Dictionary<int, List<Card>>();
+            int perPlayer = deck.Count / 4;
 
-            for (int i = 0; i < players.Count; i++)
+            for (int seat = 0; seat < 4; seat++)
             {
-                result[players[i].UserId] = deck.Skip(i * cardsPerPlayer).Take(cardsPerPlayer).ToList();
+                result[seat] = deck.Skip(seat * perPlayer).Take(perPlayer).ToList();
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// 카드 족보 비교 (턴 유효성 판단)
-        /// </summary>
-        public bool IsValidPlay(List<Card> currentPlay, List<Card> lastPlay)
-        {
-            if (lastPlay == null || lastPlay.Count == 0) return true;
-            return _ruleEngine.IsStronger(currentPlay, lastPlay);
         }
     }
 }
