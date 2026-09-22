@@ -66,6 +66,19 @@ namespace Tichu.Hub
             await _broadcaster.BroadcastLobbyAsync();
         }
 
+        public async Task AddBot(int roomId, string userId)
+        {
+            var (room, error) = _roomService.AddBot(roomId, userId);
+            if (room == null)
+            {
+                await Clients.Caller.SendAsync("ErrorMessage", error ?? "AI 봇을 추가할 수 없습니다.");
+                return;
+            }
+
+            await _broadcaster.BroadcastRoomAsync(room);
+            await _broadcaster.BroadcastLobbyAsync();
+        }
+
         public async Task ToggleReady(int roomId, string userId)
         {
             if (_roomService.ToggleReady(roomId, userId))

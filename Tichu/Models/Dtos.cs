@@ -18,6 +18,7 @@ namespace Tichu.Models
         public int TeamId { get; set; }
         public bool IsHost { get; set; }
         public bool IsReady { get; set; }
+        public bool IsBot { get; set; }
         public bool IsConnected { get; set; } = true;
         public int HandCount { get; set; }
         public bool CalledTichu { get; set; }

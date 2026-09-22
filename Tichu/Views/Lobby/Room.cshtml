@@ -61,6 +61,7 @@
 
     let state = null;
     let chatLog = [];
+    let chatDraft = '';
     let selectedCardIds = new Set();
     let exchangeAssign = {};       // cardId -> toSeat
     let exchangeSelectedCard = null;
@@ -126,7 +127,11 @@
     start();
 
     // ---------- actions ----------
-    function toggleReady() { connection.invoke('ToggleReady', ROOM_ID, USER_ID).catch(console.error); }
+    function toggleReady() {
+        connection.invoke('ToggleReady', ROOM_ID, USER_ID)
+            .then(() => showToast('준비 상태를 변경했습니다.'))
+            .catch(console.error);
+    }
     function startGame() { connection.invoke('StartGame', ROOM_ID, USER_ID).catch(console.error); }
     function leaveRoom() { connection.invoke('LeaveRoom', ROOM_ID, USER_ID).finally(() => window.location.href = '/Lobby'); }
     function callTichu() { connection.invoke('CallTichu', ROOM_ID, USER_ID).catch(console.error); }
@@ -162,11 +167,15 @@
     function giveDragon(seat) { connection.invoke('GiveDragonTrick', ROOM_ID, USER_ID, seat).catch(console.error); }
     function startNextRound() { connection.invoke('StartNextRound', ROOM_ID, USER_ID).catch(console.error); }
     function sendChat() {
-        const input = document.getElementById('chatInput');
-        const text = input.value.trim();
+        const text = chatDraft.trim();
         if (!text) return;
         connection.invoke('SendChat', ROOM_ID, USER_ID, text).catch(console.error);
-        input.value = '';
+        chatDraft = '';
+        const input = document.getElementById('chatInput');
+        if (input) { input.value = ''; input.focus(); }
+    }
+    function addBot() {
+        connection.invoke('AddBot', ROOM_ID, USER_ID).then(() => showToast('AI 봇을 추가했습니다.')).catch(console.error);
     }
 
     // ---------- turn timer (visual only, server enforces the real timeout) ----------
@@ -190,6 +199,9 @@
     function render() {
         const app = document.getElementById('app');
         if (!state) return;
+
+        const chatWasFocused = document.activeElement && document.activeElement.id === 'chatInput';
+        const chatCursor = chatWasFocused ? document.activeElement.selectionStart : null;
 
         let body;
         if (state.status === 'Waiting') body = renderWaitingRoom();
@@ -219,6 +231,14 @@
 
         const cb = document.getElementById('chatBox');
         if (cb) cb.scrollTop = cb.scrollHeight;
+
+        if (chatWasFocused) {
+            const input = document.getElementById('chatInput');
+            if (input) {
+                input.focus();
+                if (chatCursor != null) input.setSelectionRange(chatCursor, chatCursor);
+            }
+        }
     }
 
     function renderChatPanel() {
@@ -230,6 +250,8 @@
                 </div>
                 <div class="input-group input-group-sm">
                     <input id="chatInput" type="text" class="form-control" placeholder="메시지 입력 후 Enter"
+                           value="${escapeHtml(chatDraft)}"
+                           oninput="chatDraft=this.value"
                            onkeydown="if(event.key==='Enter'){sendChat();}" />
                     <button class="btn btn-outline-primary" onclick="sendChat()">전송</button>
                 </div>
@@ -246,7 +268,7 @@
             }
             return `<div class="col-6 col-md-3">
                 <div class="border rounded p-3 text-center ${p.userId === USER_ID ? 'border-primary border-2' : ''}">
-                    <div class="fw-bold">${escapeHtml(p.nickname)} ${p.isHost ? '👑' : ''}</div>
+                    <div class="fw-bold">${p.isBot ? '🤖 ' : ''}${escapeHtml(p.nickname)} ${p.isHost ? '👑' : ''}</div>
                     <div class="small text-muted">${team} · 좌석 ${s + 1}</div>
                     <span class="badge ${p.isReady ? 'text-bg-success' : 'text-bg-secondary'} mt-1">${p.isReady ? '준비완료' : '대기중'}</span>
                 </div>
@@ -260,11 +282,12 @@
             <div class="card-body">
                 <h5>대기실 (${state.players.length}/4)</h5>
                 <div class="row g-2 my-3">${seats}</div>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 flex-wrap">
                     <button class="btn btn-outline-primary" onclick="toggleReady()">${me && me.isReady ? '준비 해제' : '준비하기'}</button>
+                    ${IS_HOST && state.players.length < 4 ? `<button class="btn btn-outline-secondary" onclick="addBot()">🤖 AI 봇 추가</button>` : ''}
                     ${IS_HOST ? `<button class="btn btn-success" ${allReady ? '' : 'disabled'} onclick="startGame()">게임 시작</button>` : ''}
                 </div>
-                ${!allReady ? '<div class="text-muted small mt-2">4명이 모두 입장하고 준비를 완료해야 시작할 수 있습니다. (0,2번 좌석 = A팀, 1,3번 좌석 = B팀)</div>' : ''}
+                ${!allReady ? '<div class="text-muted small mt-2">4명이 모두 입장하고 준비를 완료해야 시작할 수 있습니다. (0,2번 좌석 = A팀, 1,3번 좌석 = B팀). 사람이 부족하면 AI 봇으로 채워도 됩니다.</div>' : ''}
             </div>
         </div>`;
     }
@@ -348,7 +371,7 @@
         if (!p.isConnected) cls.push('disconnected');
         return `<div class="${areaClass}">
             <div class="${cls.join(' ')}">
-                <div class="fw-bold">${escapeHtml(p.nickname)} ${p.isHost ? '👑' : ''} ${p.calledTichu ? '❗' : ''}</div>
+                <div class="fw-bold">${p.isBot ? '🤖 ' : ''}${escapeHtml(p.nickname)} ${p.isHost ? '👑' : ''} ${p.calledTichu ? '❗' : ''}</div>
                 <div class="small text-muted">${p.hasFinished ? `완료 · ${p.finishPosition + 1}등` : `${p.handCount}장`}</div>
                 ${isTurn ? '<div class="small text-success fw-bold">차례</div>' : ''}
             </div>

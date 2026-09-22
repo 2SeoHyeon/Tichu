@@ -87,6 +87,40 @@ namespace Tichu.Services
             }
         }
 
+        public (GameRoom? room, string? error) AddBot(int roomId, string requestingUserId)
+        {
+            if (!_rooms.TryGetValue(roomId, out var room))
+                return (null, "존재하지 않는 방입니다.");
+
+            lock (room.Lock)
+            {
+                if (room.HostUserId != requestingUserId)
+                    return (null, "방장만 AI 봇을 추가할 수 있습니다.");
+
+                if (room.Status != RoomStatus.Waiting)
+                    return (null, "이미 게임이 시작된 방입니다.");
+
+                if (room.Players.Count >= 4)
+                    return (null, "방 인원이 가득 찼습니다.");
+
+                var usedSeats = room.Players.Select(p => p.Seat).ToHashSet();
+                int seat = Enumerable.Range(0, 4).First(s => !usedSeats.Contains(s));
+                int botNumber = room.Players.Count(p => p.IsBot) + 1;
+
+                room.Players.Add(new Player
+                {
+                    UserId = "bot-" + Guid.NewGuid().ToString("N"),
+                    Nickname = $"AI 봇 {botNumber}",
+                    Seat = seat,
+                    IsBot = true,
+                    IsReady = true,
+                    IsConnected = true
+                });
+
+                return (room, null);
+            }
+        }
+
         public GameRoom? LeaveRoom(int roomId, string userId)
         {
             if (!_rooms.TryGetValue(roomId, out var room)) return null;
@@ -193,6 +227,7 @@ namespace Tichu.Services
                         TeamId = p.TeamId,
                         IsHost = p.IsHost,
                         IsReady = p.IsReady,
+                        IsBot = p.IsBot,
                         IsConnected = p.IsConnected,
                         HandCount = p.Hand.Count,
                         CalledTichu = p.CalledTichu,

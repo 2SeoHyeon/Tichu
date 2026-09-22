@@ -47,6 +47,44 @@ namespace Tichu.Controllers
             return RedirectToAction("Index", "Lobby");
         }
 
+        public IActionResult MyPage()
+        {
+            var (uid, nick) = ReadIdentity();
+            if (uid == null || nick == null) return RedirectToAction("Index");
+
+            ViewBag.Nickname = nick;
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult UpdateNickname(string nickname)
+        {
+            var (uid, _) = ReadIdentity();
+            if (uid == null) return RedirectToAction("Index");
+
+            nickname = (nickname ?? "").Trim();
+            if (nickname.Length == 0 || nickname.Length > 12)
+            {
+                ViewBag.Error = "닉네임은 1~12자로 입력해주세요.";
+                ViewBag.Nickname = nickname;
+                return View("MyPage");
+            }
+
+            var cookieOptions = new CookieOptions
+            {
+                Expires = DateTimeOffset.UtcNow.AddDays(7),
+                HttpOnly = true,
+                SameSite = SameSiteMode.Lax,
+                IsEssential = true
+            };
+            Response.Cookies.Append(UidCookie, uid, cookieOptions);
+            Response.Cookies.Append(NickCookie, nickname, cookieOptions);
+
+            TempData["Saved"] = true;
+            return RedirectToAction("MyPage");
+        }
+
         public IActionResult ChangeNickname()
         {
             Response.Cookies.Delete(UidCookie);

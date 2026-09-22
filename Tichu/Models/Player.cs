@@ -8,6 +8,7 @@ namespace Tichu.Models
         public bool IsConnected { get; set; } = true;
         public bool IsReady { get; set; }
         public bool IsHost { get; set; }
+        public bool IsBot { get; set; }
 
         /// <summary>
         /// 좌석 번호 (0~3). 0,2번이 한 팀 / 1,3번이 한 팀.
