@@ -213,7 +213,10 @@
         z-index: 1890; background: #fff; border-radius: 12px; overflow: hidden;
         box-shadow: 0 4px 20px rgba(0,0,0,0.35); display: flex; flex-direction: column;
     }
-    @@media (max-width: 576px) {
+    .chat-panel-overlay .chat-msg-input { font-size: 16px; } /* iOS 자동 확대 방지 (16px 미만이면 포커스시 화면이 확대됨) */
+    /* 576px는 실제 폰보다 좁은 경우가 많아 max-width를 768로 넓히고,
+       터치 전용(마우스 hover 불가) 기기는 폭과 무관하게 모바일 UI로 취급 */
+    @@media (max-width: 768px), (hover: none) and (pointer: coarse) {
         .chat-toggle-btn { display: flex; }
         .chat-inline-panel { display: none !important; }
     }
@@ -542,6 +545,30 @@
         chatPanelOpen = !chatPanelOpen;
         if (chatPanelOpen) chatUnread = 0;
         renderChatOverlay();
+        positionChatOverlay();
+    }
+
+    // 모바일 키보드가 열리면 실제 보이는 화면(visual viewport)이 줄어드는데,
+    // position:fixed 요소는 이걸 자동으로 반영하지 않아 입력창이 키보드 뒤로 숨거나
+    // 화면 전체가 밀려 보이는 문제가 생김. visualViewport 크기에 맞춰 패널을 다시 맞춰준다.
+    function positionChatOverlay() {
+        const overlay = document.getElementById('chatPanelOverlay');
+        if (!overlay || !chatPanelOpen) return;
+        const vv = window.visualViewport;
+        if (!vv) return;
+        const topOffset = 62;
+        overlay.style.left = vv.offsetLeft + 8 + 'px';
+        overlay.style.top = (vv.offsetTop + topOffset) + 'px';
+        overlay.style.height = Math.max(160, vv.height - topOffset - 8) + 'px';
+        overlay.style.width = (vv.width - 16) + 'px';
+        overlay.style.bottom = 'auto';
+        overlay.style.right = 'auto';
+        const cb = document.getElementById('chatBoxMobile');
+        if (cb) cb.scrollTop = cb.scrollHeight;
+    }
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', positionChatOverlay);
+        window.visualViewport.addEventListener('scroll', positionChatOverlay);
     }
 
     // ---------- turn timer (visual only, server enforces the real timeout) ----------
@@ -677,6 +704,7 @@
             </div>
         `;
 
+        positionChatOverlay();
         const cb = document.getElementById('chatBoxMobile');
         if (cb) cb.scrollTop = cb.scrollHeight;
         if (chatWasFocused) {
