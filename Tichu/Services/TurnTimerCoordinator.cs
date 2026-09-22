@@ -184,7 +184,7 @@ namespace Tichu.Services
             }
 
             int needed = game.LastPlay.Count;
-            int lastMax = game.LastPlay.Max(c => c.RankValue);
+            double lastMax = needed == 1 ? _engine.GetEffectiveLastSingleValue(game) : game.LastPlay.Max(c => c.RankValue);
             List<Card>? candidate = null;
 
             if (needed is 1 or 2 or 3)

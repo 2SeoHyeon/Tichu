@@ -60,6 +60,9 @@ namespace Tichu.Models
         public List<CardDto> LastPlay { get; set; } = new();
         public int? LastPlayerSeat { get; set; }
         public bool DragonTrickPending { get; set; }
+        public int? LastDogFromSeat { get; set; }
+        public int? LastDogToSeat { get; set; }
+        public int DogMoveSeq { get; set; }
         public List<int> ExchangeSubmittedSeats { get; set; } = new();
         public string LastMessage { get; set; } = "";
         public List<RoundLogEntry> History { get; set; } = new();

@@ -43,6 +43,11 @@ namespace Tichu.Models
 
         public bool DragonTrickPending { get; set; }
 
+        /// <summary>개(Dog)가 나가서 턴이 넘어간 가장 최근 이벤트 (연출용). DogMoveSeq가 바뀌면 새 이벤트.</summary>
+        public int? LastDogFromSeat { get; set; }
+        public int? LastDogToSeat { get; set; }
+        public int DogMoveSeq { get; set; }
+
         public List<RoundLogEntry> History { get; set; } = new();
 
         public string LastMessage { get; set; } = "";

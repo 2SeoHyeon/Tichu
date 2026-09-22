@@ -207,6 +207,9 @@ namespace Tichu.Services
                     var partner = room.Players.First(p => p.Seat == partnerSeat);
                     game.CurrentTurnSeat = partner.HasFinishedThisRound ? NextActiveSeat(room, partnerSeat) : partnerSeat;
                     game.LastMessage = $"{player.Nickname}님이 개를 내서 {partner.Nickname}님에게 턴이 넘어갔습니다.";
+                    game.LastDogFromSeat = player.Seat;
+                    game.LastDogToSeat = partnerSeat;
+                    game.DogMoveSeq++;
                 }
                 return null;
             }
@@ -214,7 +217,13 @@ namespace Tichu.Services
             var combo = _rules.DetectCombo(cards);
             if (combo == TichuComboType.None) return "유효하지 않은 카드 조합입니다.";
 
-            if (game.LastPlay.Count > 0 && !_rules.IsStronger(cards, game.LastPlay))
+            double? prevEffectiveValue = null;
+            if (game.LastPlay.Count == 1 && game.LastPlay[0].Rank == "Phoenix")
+            {
+                prevEffectiveValue = GetPhoenixEffectiveValue(game);
+            }
+
+            if (game.LastPlay.Count > 0 && !_rules.IsStronger(cards, game.LastPlay, prevEffectiveValue))
                 return "이전에 나온 패보다 강하지 않습니다.";
 
             foreach (var c in cards) player.Hand.Remove(c);
@@ -311,6 +320,25 @@ namespace Tichu.Services
             game.LastMessage = $"드래곤 트릭이 {target.Nickname}님에게 넘어갔습니다 ({trickScore}점).";
             game.LastPlayerSeat = null;
             return null;
+        }
+
+        /// <summary>
+        /// 싱글 불사조가 실제로 이긴 값 + 0.5 (예: K를 이긴 불사조는 13.5, 다음 사람은 A로 이길 수 있음).
+        /// 불사조가 트릭을 리드했다면(직전에 낸 카드가 없다면) 아주 약한 값(1.5)으로 취급한다.
+        /// </summary>
+        private double GetPhoenixEffectiveValue(GameState game)
+        {
+            var trick = game.CurrentTrickCards;
+            if (trick.Count < 2) return 1.5;
+            return trick[trick.Count - 2].RankValue + 0.5;
+        }
+
+        /// <summary>봇 AI 등 외부에서 "직전 싱글을 이기려면 얼마보다 커야 하는지" 조회할 때 사용</summary>
+        public double GetEffectiveLastSingleValue(GameState game)
+        {
+            if (game.LastPlay.Count == 1 && game.LastPlay[0].Rank == "Phoenix")
+                return GetPhoenixEffectiveValue(game);
+            return game.LastPlay.Count > 0 ? game.LastPlay.Max(c => c.RankValue) : 0;
         }
 
         private int NextActiveSeat(GameRoom room, int fromSeat)

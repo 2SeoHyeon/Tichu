@@ -129,6 +129,8 @@
     let exchangeSelectedCard = null;
     let lastTurnSignature = null;
     let timerInterval = null;
+    let lastAnimatedPlayKey = null;
+    let lastDogMoveSeq = null;
 
     // ---------- utils ----------
     function escapeHtml(s) {
@@ -166,6 +168,32 @@
         document.getElementById('toasts').appendChild(el);
         setTimeout(() => el.remove(), 3500);
     }
+    function seatPosClass(seat) {
+        const mySeat = state.mySeat;
+        if (seat === mySeat) return 'seat-bottom';
+        if (seat === (mySeat + 2) % 4) return 'seat-top';
+        if (seat === (mySeat + 1) % 4) return 'seat-right';
+        return 'seat-left';
+    }
+    function animateDogMove(fromSeat, toSeat) {
+        const fromEl = document.querySelector('.round-table .seat-pos.' + seatPosClass(fromSeat));
+        const toEl = document.querySelector('.round-table .seat-pos.' + seatPosClass(toSeat));
+        if (!fromEl || !toEl) return;
+        const fromRect = fromEl.getBoundingClientRect();
+        const toRect = toEl.getBoundingClientRect();
+        const fly = document.createElement('div');
+        fly.textContent = '🐶';
+        fly.style.cssText = `position:fixed; left:${fromRect.left + fromRect.width / 2 - 16}px; top:${fromRect.top + fromRect.height / 2 - 16}px; font-size:28px; z-index:3000; pointer-events:none; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.4));`;
+        document.body.appendChild(fly);
+        const dx = (toRect.left + toRect.width / 2) - (fromRect.left + fromRect.width / 2);
+        const dy = (toRect.top + toRect.height / 2) - (fromRect.top + fromRect.height / 2);
+        const anim = fly.animate([
+            { transform: 'translate(0px, 0px) scale(1)', opacity: 1 },
+            { transform: `translate(${dx * 0.5}px, ${dy * 0.5 - 30}px) scale(1.15)`, opacity: 1, offset: 0.5 },
+            { transform: `translate(${dx}px, ${dy}px) scale(0.9)`, opacity: 0.9 }
+        ], { duration: 700, easing: 'ease-in-out' });
+        anim.onfinish = () => fly.remove();
+    }
     function tichuButtonsHtml(me, allowGrand) {
         if (!me) return '';
         if (me.tichuCall === 'Grand') return `<span class="badge text-bg-warning align-self-center">⚡ 라지 티츄 콜!</span>`;
@@ -188,6 +216,12 @@
     connection.on("RoomState", s => {
         state = s;
         render();
+
+        if (s.status === 'Playing' && s.phase === 'Playing' && s.dogMoveSeq && s.dogMoveSeq !== lastDogMoveSeq) {
+            lastDogMoveSeq = s.dogMoveSeq;
+            animateDogMove(s.lastDogFromSeat, s.lastDogToSeat);
+        }
+
         const sig = `${s.phase}:${s.currentTurnSeat}:${s.dragonTrickPending}:${s.lastPlayerSeat}:${(s.lastPlay || []).length}:${s.roundNumber}:${s.status}`;
         if (sig !== lastTurnSignature) {
             lastTurnSignature = sig;
@@ -484,7 +518,10 @@
         const myTurn = state.currentTurnSeat === mySeat && !state.dragonTrickPending && !me?.hasFinished;
         const finished = !!me?.hasFinished;
 
-        const lastPlayHtml = state.lastPlay.map(c => renderCard(c, { small: true, anim: true })).join('');
+        const playKey = state.lastPlay.map(c => c.id).join(',') + '#' + state.lastPlayerSeat;
+        const shouldAnimatePlay = state.lastPlay.length > 0 && playKey !== lastAnimatedPlayKey;
+        lastAnimatedPlayKey = playKey;
+        const lastPlayHtml = state.lastPlay.map(c => renderCard(c, { small: true, anim: shouldAnimatePlay })).join('');
         const lastPlayerName = state.lastPlayerSeat != null
             ? (state.players.find(p => p.seat === state.lastPlayerSeat)?.nickname ?? '')
             : '';

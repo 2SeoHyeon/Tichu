@@ -26,7 +26,11 @@ namespace Tichu.Models
             return TichuComboType.None;
         }
 
-        public bool IsStronger(List<Card> current, List<Card> previous)
+        /// <param name="previousEffectiveValue">
+        /// 이전 패가 싱글 불사조일 때, 그 불사조가 실제로 이겼던 값 + 0.5 (예: K를 이긴 불사조는 13.5).
+        /// 이 값을 넘겨받으면 불사조의 고정 랭크(15) 대신 이 값으로 비교한다.
+        /// </param>
+        public bool IsStronger(List<Card> current, List<Card> previous, double? previousEffectiveValue = null)
         {
             var curType = DetectCombo(current);
             var prevType = DetectCombo(previous);
@@ -44,7 +48,9 @@ namespace Tichu.Models
 
                 // 같은 타입이면 최댓값 비교
                 var curMax = current.Max(c => c.RankValue);
-                var prevMax = previous.Max(c => c.RankValue);
+                double prevMax = (curType == TichuComboType.Single && previousEffectiveValue.HasValue)
+                    ? previousEffectiveValue.Value
+                    : previous.Max(c => c.RankValue);
                 return curMax > prevMax;
             }
 

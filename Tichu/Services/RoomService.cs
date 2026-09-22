@@ -246,6 +246,9 @@ namespace Tichu.Services
                 dto.LastPlay = game.LastPlay.Select(CardDto.From).ToList();
                 dto.LastPlayerSeat = game.LastPlayerSeat;
                 dto.DragonTrickPending = game.DragonTrickPending;
+                dto.LastDogFromSeat = game.LastDogFromSeat;
+                dto.LastDogToSeat = game.LastDogToSeat;
+                dto.DogMoveSeq = game.DogMoveSeq;
                 dto.ExchangeSubmittedSeats = game.PendingExchange.Keys.ToList();
                 dto.LastMessage = game.LastMessage;
                 dto.History = game.History;
