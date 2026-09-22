@@ -165,10 +165,10 @@ namespace Tichu.Services
             game.PendingExchange.Clear();
             game.Phase = GamePhase.Playing;
 
-            // 방장이 항상 라운드의 첫 트릭을 리드한다
-            var leader = room.Players.First(p => p.IsHost);
+            // 마작을 보유한 사람이 항상 라운드의 첫 트릭을 리드한다
+            var leader = room.Players.First(p => p.Hand.Any(c => c.Rank == "Mahjong"));
             game.CurrentTurnSeat = leader.Seat;
-            game.LastMessage = $"{leader.Nickname}님(방장)부터 시작합니다.";
+            game.LastMessage = $"{leader.Nickname}님부터 시작합니다 (마작 보유).";
         }
 
         public string? PlayCards(GameRoom room, string userId, List<int> cardIds)
