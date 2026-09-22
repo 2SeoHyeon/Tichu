@@ -51,5 +51,9 @@ namespace Tichu.Models
         public List<RoundLogEntry> History { get; set; } = new();
 
         public string LastMessage { get; set; } = "";
+
+        /// <summary>마작을 낸 사람이 건 소원 랭크값(2~14). 아직 아무도 그 값을 포함해서 못 냈다면
+        /// 계속 유효하고, 누군가 그 값을 포함한 패를 내면(또는 낼 수 있는데 안 내면 서버가 막음) null로 풀림.</summary>
+        public int? MahjongWish { get; set; }
     }
 }

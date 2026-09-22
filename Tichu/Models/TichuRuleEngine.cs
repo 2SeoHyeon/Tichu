@@ -7,12 +7,29 @@ namespace Tichu.Models
 
     public class TichuRuleEngine
     {
+        // 불사조가 대신할 수 있는 랭크값 2~14(에이스). 마작/드래곤/도그 등 특수카드는
+        // 실제 티츄 규칙상 불사조로 대신할 수 없어서 제외. 낮은 값부터 시도해서 여러 방식으로
+        // 완성 가능한 스트레이트 등에서는 가장 낮은 완성을 기본으로 선택한다.
+        private static readonly Dictionary<int, string> WildcardRankStrings = new()
+        {
+            { 2, "2" }, { 3, "3" }, { 4, "4" }, { 5, "5" }, { 6, "6" }, { 7, "7" },
+            { 8, "8" }, { 9, "9" }, { 10, "10" }, { 11, "J" }, { 12, "Q" }, { 13, "K" }, { 14, "A" }
+        };
+
         public TichuComboType DetectCombo(List<Card> cards)
         {
             if (cards == null || cards.Count == 0) return TichuComboType.None;
+            var sorted = cards.OrderBy(c => c.RankValue).ToList();
+            if (sorted.Count == 1) return TichuComboType.Single;
 
-            cards = cards.OrderBy(c => c.RankValue).ToList();
+            if (sorted.Any(c => c.Rank == "Phoenix") && sorted.Count >= 2)
+                return DetectComboWithPhoenix(sorted).type;
 
+            return DetectComboRaw(sorted);
+        }
+
+        private TichuComboType DetectComboRaw(List<Card> cards)
+        {
             if (cards.Count == 1) return TichuComboType.Single;
             if (cards.Count == 2 && cards[0].RankValue == cards[1].RankValue) return TichuComboType.Pair;
             if (cards.Count == 3 && cards.All(c => c.RankValue == cards[0].RankValue)) return TichuComboType.Triple;
@@ -24,6 +41,39 @@ namespace Tichu.Models
             if (cards.Count >= 5 && IsStraight(cards)) return TichuComboType.Straight;
 
             return TichuComboType.None;
+        }
+
+        /// <summary>
+        /// 불사조가 포함된 조합을, 불사조를 1(마작)~14(에이스) 중 하나로 대신 채워서
+        /// 페어/트리플/풀하우스/연속 페어/스트레이트가 완성되는지 찾는다.
+        /// (불사조는 폭탄에는 절대 쓸 수 없음 - 무늬가 Special이라 폭탄 조건에서 자동으로 제외됨)
+        /// </summary>
+        private (TichuComboType type, int phoenixValue) DetectComboWithPhoenix(List<Card> sorted)
+        {
+            var withoutPhoenix = sorted.Where(c => c.Rank != "Phoenix").ToList();
+            foreach (var (value, rank) in WildcardRankStrings)
+            {
+                // Suit="Special"로 두면 IsBombStraight의 "같은 무늬" 조건이 절대 성립하지 않아서
+                // 불사조로 폭탄(스트레이트 폭탄)을 완성하는 일이 없음 (실제 규칙상 불사조는 폭탄에 못 씀)
+                var dummy = new Card { Id = -1, Suit = "Special", Rank = rank };
+                var candidate = withoutPhoenix.Concat(new[] { dummy }).OrderBy(c => c.RankValue).ToList();
+                var type = DetectComboRaw(candidate);
+                if (type != TichuComboType.None) return (type, value);
+            }
+            return (TichuComboType.None, 0);
+        }
+
+        /// <summary>
+        /// 조합의 비교 기준값(최댓값). 여러 장짜리 조합(페어 이상)에서 불사조가 빈 자리를
+        /// 채우고 있으면 대신하는 랭크값으로 계산한다. 싱글 불사조는 여기 해당하지 않음 -
+        /// 싱글일 때의 실제 기준값은 GameEngine의 GetEffectiveLastSingleValue/previousEffectiveValue가
+        /// 따로 처리하고, 불사조 자신을 내는 패의 세기는 항상 고정 랭크(15)를 그대로 써야 한다.
+        /// </summary>
+        private double ComboMaxValue(List<Card> cards, TichuComboType type)
+        {
+            if (type == TichuComboType.Single || !cards.Any(c => c.Rank == "Phoenix")) return cards.Max(c => c.RankValue);
+            var (_, phoenixValue) = DetectComboWithPhoenix(cards.OrderBy(c => c.RankValue).ToList());
+            return cards.Where(c => c.Rank != "Phoenix").Select(c => (double)c.RankValue).Append(phoenixValue).Max();
         }
 
         /// <param name="previousEffectiveValue">
@@ -46,11 +96,11 @@ namespace Tichu.Models
                 // 장수 다르면 불가 (예: 더 많은 카드로 같은 타입 못침)
                 if (current.Count != previous.Count) return false;
 
-                // 같은 타입이면 최댓값 비교
-                var curMax = current.Max(c => c.RankValue);
+                // 같은 타입이면 최댓값 비교 (불사조가 섞여 있으면 대신하는 랭크값 기준)
+                var curMax = ComboMaxValue(current, curType);
                 double prevMax = (curType == TichuComboType.Single && previousEffectiveValue.HasValue)
                     ? previousEffectiveValue.Value
-                    : previous.Max(c => c.RankValue);
+                    : ComboMaxValue(previous, prevType);
                 return curMax > prevMax;
             }
 

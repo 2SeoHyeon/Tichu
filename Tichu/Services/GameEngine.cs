@@ -58,6 +58,7 @@ namespace Tichu.Services
             game.FinishedSeatOrder.Clear();
             game.DragonTrickPending = false;
             game.Phase = GamePhase.Exchange;
+            game.MahjongWish = null;
             game.LastMessage = "카드를 교환하세요 (왼쪽/파트너/오른쪽에게 1장씩).";
 
             foreach (var p in room.Players)
@@ -171,7 +172,7 @@ namespace Tichu.Services
             game.LastMessage = $"{leader.Nickname}님부터 시작합니다 (마작 보유).";
         }
 
-        public string? PlayCards(GameRoom room, string userId, List<int> cardIds)
+        public string? PlayCards(GameRoom room, string userId, List<int> cardIds, int? mahjongWish = null)
         {
             var game = room.Game;
             if (game == null) return "게임이 없습니다.";
@@ -226,6 +227,9 @@ namespace Tichu.Services
             if (game.LastPlay.Count > 0 && !_rules.IsStronger(cards, game.LastPlay, prevEffectiveValue))
                 return "이전에 나온 패보다 강하지 않습니다.";
 
+            var wishError = CheckMahjongWishViolation(game, player, cards);
+            if (wishError != null) return wishError;
+
             foreach (var c in cards) player.Hand.Remove(c);
             player.HasActedThisRound = true;
             game.CurrentTrickCards.AddRange(cards);
@@ -233,6 +237,18 @@ namespace Tichu.Services
             game.LastPlayerSeat = player.Seat;
             game.PassStreak = 0;
             game.LastMessage = $"{player.Nickname}님이 카드를 냈습니다.";
+
+            // 기존에 걸려있던 소원을 이번 패로 만족시켰다면 해제
+            if (game.MahjongWish.HasValue && cards.Any(c => c.RankValue == game.MahjongWish.Value))
+            {
+                game.MahjongWish = null;
+            }
+            // 이번에 마작을 내면서 새 소원을 걸었다면 등록 (2~14만 유효, 마작 자신은 대상에서 제외)
+            if (cards.Any(c => c.Rank == "Mahjong") && mahjongWish is >= 2 and <= 14)
+            {
+                game.MahjongWish = mahjongWish;
+                game.LastMessage += $" (소원: {mahjongWish}!)";
+            }
 
             bool didFinish = CheckFinish(room, player);
             if (game.Phase != GamePhase.Playing) return null; // 라운드 종료됨
@@ -339,6 +355,37 @@ namespace Tichu.Services
             if (game.LastPlay.Count == 1 && game.LastPlay[0].Rank == "Phoenix")
                 return GetPhoenixEffectiveValue(game);
             return game.LastPlay.Count > 0 ? game.LastPlay.Max(c => c.RankValue) : 0;
+        }
+
+        /// <summary>
+        /// 마작 소원이 걸려있는데, 이번에 내려는 패가 그 값을 포함하지 않으면서도 그 값을 포함한
+        /// 합법적인 패로 이길 수 있었다면 막는다. 싱글/페어/트리플까지만 검사한다
+        /// (풀하우스/연속페어/스트레이트까지 전부 검사하려면 손패 부분집합을 모두 뒤져야 해서 범위 밖으로 둠).
+        /// </summary>
+        private string? CheckMahjongWishViolation(GameState game, Player player, List<Card> submittedCards)
+        {
+            if (!game.MahjongWish.HasValue) return null;
+            int wish = game.MahjongWish.Value;
+            if (submittedCards.Any(c => c.RankValue == wish)) return null; // 이번 패로 만족시킴
+
+            var wishCards = player.Hand.Where(c => c.RankValue == wish).ToList();
+            if (wishCards.Count == 0) return null; // 애초에 소원 카드가 없으면 의무 없음
+
+            if (game.LastPlay.Count == 0)
+                return $"마작 소원(값 {wish})을 만족하는 카드를 갖고 있다면 반드시 포함해서 내야 합니다.";
+
+            int needed = game.LastPlay.Count;
+            if (needed > 3) return null; // 풀하우스 이상은 검사하지 않음
+
+            double lastMax = needed == 1 ? GetEffectiveLastSingleValue(game) : game.LastPlay.Max(c => c.RankValue);
+            if (wish <= lastMax) return null; // 소원 값이어도 어차피 이전 패를 못 이기면 의무 없음
+
+            bool hasPhoenix = player.Hand.Any(c => c.Rank == "Phoenix");
+            bool canFulfill = wishCards.Count >= needed || (wishCards.Count >= needed - 1 && hasPhoenix);
+            if (canFulfill)
+                return $"마작 소원(값 {wish})을 만족하는 카드로 이번 패를 이길 수 있다면 반드시 그렇게 내야 합니다.";
+
+            return null;
         }
 
         private int NextActiveSeat(GameRoom room, int fromSeat)

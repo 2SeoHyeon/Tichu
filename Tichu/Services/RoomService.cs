@@ -277,6 +277,7 @@ namespace Tichu.Services
                 dto.LastDogToSeat = game.LastDogToSeat;
                 dto.DogMoveSeq = game.DogMoveSeq;
                 dto.ExchangeSubmittedSeats = game.PendingExchange.Keys.ToList();
+                dto.MahjongWish = game.MahjongWish;
                 dto.LastMessage = game.LastMessage;
                 dto.History = game.History;
 

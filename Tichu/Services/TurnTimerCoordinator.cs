@@ -174,6 +174,17 @@ namespace Tichu.Services
             var handCards = bot.Hand;
             if (handCards.Count == 0) return;
 
+            // 마작 소원이 걸려있으면 실제 규칙상 의무이므로 (파트너 보호보다도) 최우선으로 만족시키려 시도
+            if (game.MahjongWish.HasValue)
+            {
+                var wishPlay = TryBuildMahjongWishFulfillment(game, handCards);
+                if (wishPlay != null)
+                {
+                    _engine.PlayCards(room, bot.UserId, wishPlay.Select(c => c.Id).ToList());
+                    return;
+                }
+            }
+
             if (game.LastPlay.Count == 0)
             {
                 // 리드: 개(Dog)를 제외한 가장 낮은 카드로 안전하게 시작
@@ -213,6 +224,39 @@ namespace Tichu.Services
             {
                 _engine.Pass(room, bot.UserId);
             }
+        }
+
+        /// <summary>
+        /// 마작 소원을 지금 낼 수 있는 패로 만족시킬 수 있으면 그 카드 목록을 반환한다
+        /// (없으면 null, 즉 소원 무시하고 평소대로 진행). GameEngine의 CheckMahjongWishViolation과
+        /// 같은 범위(싱글/페어/트리플)만 다룬다.
+        /// </summary>
+        private List<Card>? TryBuildMahjongWishFulfillment(GameState game, List<Card> handCards)
+        {
+            int wish = game.MahjongWish!.Value;
+            var wishCards = handCards.Where(c => c.RankValue == wish).ToList();
+            if (wishCards.Count == 0) return null;
+
+            if (game.LastPlay.Count == 0)
+            {
+                return new List<Card> { wishCards[0] };
+            }
+
+            int needed = game.LastPlay.Count;
+            if (needed > 3) return null;
+
+            double lastMax = needed == 1 ? _engine.GetEffectiveLastSingleValue(game) : game.LastPlay.Max(c => c.RankValue);
+            if (wish <= lastMax) return null;
+
+            if (wishCards.Count >= needed) return wishCards.Take(needed).ToList();
+
+            var phoenix = handCards.FirstOrDefault(c => c.Rank == "Phoenix");
+            if (phoenix != null && wishCards.Count >= needed - 1)
+            {
+                return wishCards.Concat(new[] { phoenix }).ToList();
+            }
+
+            return null;
         }
     }
 }

@@ -142,6 +142,14 @@
     .player-slot.disconnected { opacity: 0.5; }
     .player-slot.me { outline: 3px solid #0d6efd; }
     .player-slot .slot-sub { font-size: 0.82rem; color: #495057; margin-top: 2px; }
+    .mini-cardback-row { display: flex; justify-content: center; height: 20px; margin-top: 4px; }
+    .mini-cardback {
+        width: 13px; height: 18px; border-radius: 3px; margin-left: -8px; flex-shrink: 0;
+        background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        border: 1px solid rgba(255,255,255,0.55);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+    .mini-cardback:first-child { margin-left: 0; }
 
     .center-play {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -256,6 +264,7 @@
     let lastDogMoveSeq = null;
     let knownTichuCalls = {};
     let lastHandAreaKey = null;    // 손패 영역은 내용이 실제로 바뀔 때만 다시 그려서 깜빡임(호버 등) 방지
+    let pendingMahjongPlay = null; // 마작 포함 선택 후 "내기" 눌렀을 때, 소원 선택 UI를 보여주는 동안 대기 중인 카드ID 목록
     const PLAY_ANIM_DELAY = 0.28; // 초 - 날아가는 카드가 도착할 때쯤 실제 카드가 나타나도록
 
     // ---------- utils ----------
@@ -269,6 +278,8 @@
 
     const SPECIAL_ICON = { Dragon: '🐉', Phoenix: '🔥', Dog: '🐶', Mahjong: '🀄' };
     const SPECIAL_NAME = { Dragon: '드래곤', Phoenix: '불사조', Dog: '도그', Mahjong: '마작' };
+    const RANK_LABELS = { 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10', 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };
+    function rankLabel(value) { return RANK_LABELS[value] ?? String(value); }
 
     function renderCard(card, opts = {}) {
         const isSpecial = card.suit === 'Special';
@@ -369,6 +380,20 @@
         return html;
     }
 
+    function mahjongWishPickerHtml() {
+        const buttons = Object.keys(RANK_LABELS).map(v =>
+            `<button class="btn btn-sm btn-outline-primary" onclick="chooseMahjongWish(${v})">${RANK_LABELS[v]}</button>`
+        ).join('');
+        return `<div class="alert alert-warning py-2 px-2 mb-2">
+            <div class="small fw-bold mb-1">🀄 마작 소원 (선택 사항) — 다음에 꼭 나와야 할 숫자를 지정할 수 있어요</div>
+            <div class="d-flex flex-wrap gap-1 mb-2">${buttons}</div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-secondary" onclick="submitPlay(pendingMahjongPlay, null)">소원 없이 내기</button>
+                <button class="btn btn-sm btn-outline-danger" onclick="cancelMahjongWish()">취소</button>
+            </div>
+        </div>`;
+    }
+
     // ---------- 클라이언트 측 조합 판정 (서버가 최종 판단, 여기선 미리보기용) ----------
     function isStraightClient(sorted) {
         if (sorted.some(c => c.suit === 'Special' && c.rank !== 'Mahjong')) return false;
@@ -397,9 +422,7 @@
         if (!sorted.every(c => c.suit === suit)) return false;
         return isStraightClient(sorted);
     }
-    function detectComboClient(cards) {
-        if (!cards || cards.length === 0) return 'None';
-        const sorted = [...cards].sort((a, b) => a.rankValue - b.rankValue);
+    function detectComboRawClient(sorted) {
         const n = sorted.length;
         const allSameRank = sorted.every(c => c.rankValue === sorted[0].rankValue);
         if (n === 1) return 'Single';
@@ -412,7 +435,39 @@
         if (n >= 5 && isStraightClient(sorted)) return 'Straight';
         return 'None';
     }
+    // 불사조가 대신할 수 있는 랭크값 2~14 (마작/드래곤/도그 등 특수카드는 대신 못 함, 서버와 동일)
+    const WILDCARD_RANK_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+    // 불사조가 포함된 조합을 랭크값 하나로 대신 채워서 완성되는지 찾는다 (서버 DetectComboWithPhoenix와 동일 로직).
+    // suit는 실제 카드에는 없는 'Wild' 값을 써서, 무늬가 우연히 같아져 스트레이트 폭탄으로
+    // 잘못 판정되는 일도 없고(불사조는 폭탄에 못 씀), 'Special' 무늬 제외 체크에도 안 걸리게 한다.
+    function detectComboWithPhoenixClient(sorted) {
+        const withoutPhoenix = sorted.filter(c => c.rank !== 'Phoenix');
+        for (const value of WILDCARD_RANK_VALUES) {
+            const dummy = { id: -1, suit: 'Wild', rank: '__wild__', rankValue: value };
+            const candidate = [...withoutPhoenix, dummy].sort((a, b) => a.rankValue - b.rankValue);
+            const type = detectComboRawClient(candidate);
+            if (type !== 'None') return { type, phoenixValue: value };
+        }
+        return { type: 'None', phoenixValue: 0 };
+    }
+    function detectComboClient(cards) {
+        if (!cards || cards.length === 0) return 'None';
+        const sorted = [...cards].sort((a, b) => a.rankValue - b.rankValue);
+        if (sorted.length === 1) return 'Single';
+        if (sorted.some(c => c.rank === 'Phoenix') && sorted.length >= 2) {
+            return detectComboWithPhoenixClient(sorted).type;
+        }
+        return detectComboRawClient(sorted);
+    }
     function isBombClient(t) { return t === 'BombFour' || t === 'BombStraight'; }
+    // 조합의 비교 기준값(최댓값). 불사조가 포함돼 있으면 대신하는 랭크값으로 계산 (서버 ComboMaxValue와 동일)
+    function comboMaxValueClient(cards) {
+        if (!cards.some(c => c.rank === 'Phoenix')) return Math.max(...cards.map(c => c.rankValue));
+        const sorted = [...cards].sort((a, b) => a.rankValue - b.rankValue);
+        const { phoenixValue } = detectComboWithPhoenixClient(sorted);
+        const nonPhoenixValues = cards.filter(c => c.rank !== 'Phoenix').map(c => c.rankValue);
+        return Math.max(...nonPhoenixValues, phoenixValue);
+    }
     function isStrongerClient(current, previous, previousEffectiveValue) {
         const curType = detectComboClient(current);
         const prevType = detectComboClient(previous);
@@ -420,13 +475,13 @@
         if (prevType === 'None') return true;
         if (curType === prevType) {
             if (current.length !== previous.length) return false;
-            const curMax = Math.max(...current.map(c => c.rankValue));
+            const curMax = comboMaxValueClient(current);
             // 싱글일 때 이전 패가 불사조면 서버가 계산한 실제 기준값(리드=1.5, 다른 카드 위=그 값+0.5)을 써야
             // "불사조 리드 후 아무것도 못 낸다" 같은 오판정이 없음 (불사조 자체 rankValue만 보면 너무 세보임)
             if (curType === 'Single' && previousEffectiveValue != null) {
                 return curMax > previousEffectiveValue;
             }
-            const prevMax = Math.max(...previous.map(c => c.rankValue));
+            const prevMax = comboMaxValueClient(previous);
             return curMax > prevMax;
         }
         if (isBombClient(curType) && !isBombClient(prevType)) return true;
@@ -437,6 +492,46 @@
             return Math.max(...current.map(c => c.rankValue)) > Math.max(...previous.map(c => c.rankValue));
         }
         return false;
+    }
+
+    // 서버 CheckMahjongWishViolation과 같은 범위(싱글/페어/트리플)만 미리보기 (풀하우스 이상은 서버가 최종 판단)
+    function mahjongWishViolationHint(selectedCards) {
+        if (state.mahjongWish == null) return '';
+        const wish = state.mahjongWish;
+        if (selectedCards.some(c => c.rankValue === wish)) return '';
+
+        const wishCards = state.myHand.filter(c => c.rankValue === wish);
+        if (wishCards.length === 0) return '';
+
+        if (state.lastPlay.length === 0) {
+            return `⚠️ 마작 소원(${rankLabel(wish)})을 갖고 있으면 반드시 포함해서 내야 해요`;
+        }
+
+        const needed = state.lastPlay.length;
+        if (needed > 3) return '';
+
+        const lastMax = needed === 1
+            ? (state.lastPlayEffectiveValue ?? Math.max(...state.lastPlay.map(c => c.rankValue)))
+            : Math.max(...state.lastPlay.map(c => c.rankValue));
+        if (wish <= lastMax) return '';
+
+        const hasPhoenix = state.myHand.some(c => c.rank === 'Phoenix');
+        const canFulfill = wishCards.length >= needed || (wishCards.length >= needed - 1 && hasPhoenix);
+        return canFulfill ? `⚠️ 마작 소원(${rankLabel(wish)})으로 이길 수 있으면 반드시 그렇게 내야 해요` : '';
+    }
+
+    // 도움말 모달이 열려있는 동안은 채팅 플로팅 버튼이 모달의 닫기(X) 버튼 위에 겹쳐서
+    // 닫기를 클릭해도 채팅 버튼이 클릭을 가로채는 문제가 있어, 모달이 열려있는 동안은 숨긴다.
+    const helpModalEl = document.getElementById('helpModal');
+    if (helpModalEl) {
+        helpModalEl.addEventListener('show.bs.modal', () => {
+            const btn = document.getElementById('chatToggleBtn');
+            if (btn) btn.style.display = 'none';
+        });
+        helpModalEl.addEventListener('hidden.bs.modal', () => {
+            const btn = document.getElementById('chatToggleBtn');
+            if (btn) btn.style.removeProperty('display');
+        });
     }
 
     // ---------- SignalR ----------
@@ -531,9 +626,29 @@
     function clearSelection() { selectedCardIds.clear(); render(); }
     function playSelected() {
         const ids = [...selectedCardIds];
-        connection.invoke('PlayCards', ROOM_ID, USER_ID, ids)
+        const cards = state.myHand.filter(c => ids.includes(c.id));
+        if (cards.some(c => c.rank === 'Mahjong')) {
+            // 마작이 포함되면 소원(선택)을 먼저 고르게 한다
+            pendingMahjongPlay = ids;
+            render();
+            return;
+        }
+        submitPlay(ids, null);
+    }
+    function submitPlay(ids, mahjongWish) {
+        pendingMahjongPlay = null;
+        connection.invoke('PlayCards', ROOM_ID, USER_ID, ids, mahjongWish)
             .then(() => { selectedCardIds.clear(); })
             .catch(console.error);
+        render();
+    }
+    function chooseMahjongWish(value) {
+        if (!pendingMahjongPlay) return;
+        submitPlay(pendingMahjongPlay, value);
+    }
+    function cancelMahjongWish() {
+        pendingMahjongPlay = null;
+        render();
     }
     function passTurn() { connection.invoke('Pass', ROOM_ID, USER_ID).catch(console.error); }
     function giveDragon(seat) { connection.invoke('GiveDragonTrick', ROOM_ID, USER_ID, seat).catch(console.error); }
@@ -885,11 +1000,14 @@
         if (p.userId === USER_ID) cls.push('me');
 
         const tichuBadge = p.tichuCall === 'Grand' ? ' ⚡' : (p.tichuCall === 'Small' ? ' ❗' : '');
+        const cardbackRow = `<div class="mini-cardback-row">${Array.from({ length: p.handCount }).map(() => '<div class="mini-cardback"></div>').join('')}</div>`;
 
         return `<div class="seat-pos ${posClass}">
             <div class="${cls.join(' ')}">
                 <div class="fw-bold">${p.isBot ? '🤖 ' : ''}${escapeHtml(p.nickname)}${p.isHost ? ' 👑' : ''}${tichuBadge}</div>
-                <div class="slot-sub">${p.hasFinished ? `완료 · ${p.finishPosition + 1}등` : `${p.handCount}장`}</div>
+                ${p.hasFinished
+                    ? `<div class="slot-sub">완료 · ${p.finishPosition + 1}등</div>`
+                    : `${cardbackRow}<div class="slot-sub">${p.handCount}장</div>`}
                 ${isTurn ? '<div class="small text-success fw-bold">👉 차례</div>' : ''}
             </div>
         </div>`;
@@ -916,6 +1034,10 @@
         const centerLabel = state.lastPlay.length === 0
             ? '자유롭게 리드'
             : (lastPlayerName ? `이전 패 · ${escapeHtml(lastPlayerName)}` : '이전 패');
+
+        const wishBanner = state.mahjongWish != null
+            ? `<div class="alert alert-warning py-1 px-2 mb-2 small fw-bold text-center">🀄 마작 소원: ${rankLabel(state.mahjongWish)} — 이 값을 낼 수 있는 사람은 반드시 내야 해요!</div>`
+            : '';
 
         let turnBanner = '';
         if (!state.dragonTrickPending) {
@@ -956,6 +1078,7 @@
                         <div id="turnBar" class="progress-bar bg-success" style="width:100%"></div>
                     </div>
                 </div>
+                ${wishBanner}
                 ${turnBanner}
                 ${dragonPanel}
                 <div class="round-table">
@@ -983,6 +1106,8 @@
                 hint = (!isBombClient(comboType) && selectedCards.length !== state.lastPlay.length)
                     ? `⚠️ ${state.lastPlay.length}장을 내야 해요`
                     : '⚠️ 이전 패보다 약해요';
+            } else if (mahjongWishViolationHint(selectedCards)) {
+                hint = mahjongWishViolationHint(selectedCards);
             } else {
                 canPlay = true;
             }
@@ -1008,6 +1133,7 @@
                         <button class="btn btn-sm btn-outline-dark" ${myTurn && state.lastPlay.length > 0 ? '' : 'disabled'} onclick="passTurn()">패스</button>
                     </div>
                 </div>
+                ${pendingMahjongPlay ? mahjongWishPickerHtml() : ''}
                 ${hint ? `<div class="text-danger small fw-bold mb-1">${hint}</div>` : ''}
                 <div class="hand-row">${finished ? '<span class="text-muted">이번 라운드를 마쳤습니다. 결과를 기다려주세요.</span>' : cardsHtml}</div>
             </div>
@@ -1015,7 +1141,7 @@
 
         const handKey = ['play', state.myHand.map(c => c.id).join(','),
             [...selectedCardIds].sort((a, b) => a - b).join(','), myTurn, state.lastPlay.length,
-            finished, me?.tichuCall, canPlay, hint].join('|');
+            finished, me?.tichuCall, canPlay, hint, pendingMahjongPlay ? pendingMahjongPlay.join(',') : ''].join('|');
 
         return { tableHtml, handHtml, handKey };
     }

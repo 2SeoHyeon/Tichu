@@ -67,6 +67,7 @@ namespace Tichu.Models
         public int DogMoveSeq { get; set; }
         public List<int> ExchangeSubmittedSeats { get; set; } = new();
         public string LastMessage { get; set; } = "";
+        public int? MahjongWish { get; set; }
         public List<RoundLogEntry> History { get; set; } = new();
 
         // ----- private to the viewer -----

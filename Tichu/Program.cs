@@ -6,7 +6,10 @@ using Tichu.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
-builder.Services.AddSignalR();
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = builder.Environment.IsDevelopment();
+});
 
 builder.Services.AddSingleton<RoomService>();
 builder.Services.AddSingleton<GameService>();

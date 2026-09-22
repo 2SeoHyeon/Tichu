@@ -137,9 +137,9 @@ namespace Tichu.Hub
             await RunEngineAction(roomId, room => _engine.SubmitExchange(room, userId, list));
         }
 
-        public async Task PlayCards(int roomId, string userId, List<int> cardIds)
+        public async Task PlayCards(int roomId, string userId, List<int> cardIds, int? mahjongWish = null)
         {
-            await RunEngineAction(roomId, room => _engine.PlayCards(room, userId, cardIds));
+            await RunEngineAction(roomId, room => _engine.PlayCards(room, userId, cardIds, mahjongWish));
         }
 
         public async Task Pass(int roomId, string userId)
