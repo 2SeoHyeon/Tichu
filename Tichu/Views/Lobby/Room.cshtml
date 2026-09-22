@@ -24,8 +24,8 @@
         transition: transform 0.12s ease, box-shadow 0.12s ease;
         flex-shrink: 0;
     }
-    .tichu-card:not(.disabled):hover { transform: translateY(-4px); }
-    .tichu-card.selected { border-color: #0d6efd; border-width: 2px; transform: translateY(-12px); box-shadow: 0 6px 10px rgba(13,110,253,0.4); }
+    .tichu-card:not(.disabled):hover { box-shadow: 0 3px 6px rgba(0,0,0,0.25); }
+    .tichu-card.selected { border-color: #0d6efd; border-width: 2px; box-shadow: 0 0 0 3px rgba(13,110,253,0.3); }
     .tichu-card.disabled { cursor: default; opacity: 0.5; }
 
     .tichu-card .card-corner { position: absolute; top: 4px; left: 6px; font-size: 0.72rem; font-weight: 800; line-height: 1.1; }
@@ -99,10 +99,10 @@
     }
 
     @@keyframes playDrop {
-        from { transform: translateY(-26px) scale(0.6); opacity: 0; }
-        to { transform: translateY(0) scale(1); opacity: 1; }
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
-    .card-play-anim { animation: playDrop 0.32s ease-out; }
+    .card-play-anim { animation: playDrop 0.25s ease-out; }
 
     .ready-icon {
         position: absolute; top: -10px; right: -10px; font-size: 1.4rem;
@@ -188,10 +188,9 @@
         const dx = (toRect.left + toRect.width / 2) - (fromRect.left + fromRect.width / 2);
         const dy = (toRect.top + toRect.height / 2) - (fromRect.top + fromRect.height / 2);
         const anim = fly.animate([
-            { transform: 'translate(0px, 0px) scale(1)', opacity: 1 },
-            { transform: `translate(${dx * 0.5}px, ${dy * 0.5 - 30}px) scale(1.15)`, opacity: 1, offset: 0.5 },
-            { transform: `translate(${dx}px, ${dy}px) scale(0.9)`, opacity: 0.9 }
-        ], { duration: 700, easing: 'ease-in-out' });
+            { transform: 'translate(0px, 0px)', opacity: 1 },
+            { transform: `translate(${dx}px, ${dy}px)`, opacity: 0.6 }
+        ], { duration: 450, easing: 'ease-in-out' });
         anim.onfinish = () => fly.remove();
     }
     function tichuButtonsHtml(me, allowGrand) {
