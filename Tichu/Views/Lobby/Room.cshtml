@@ -110,7 +110,11 @@
         from { opacity: 0; }
         to { opacity: 1; }
     }
-    .card-play-anim { animation: playDrop 0.25s ease-out; }
+    .card-play-anim {
+        animation: playDrop 0.15s ease-out;
+        animation-delay: var(--play-delay, 0s);
+        animation-fill-mode: backwards;
+    }
 
     .ready-icon {
         position: absolute; top: -12px; right: -12px; font-size: 1.7rem;
@@ -148,6 +152,7 @@
     let lastAnimatedPlayKey = null;
     let lastDogMoveSeq = null;
     let knownTichuCalls = {};
+    const PLAY_ANIM_DELAY = 0.28; // 초 - 날아가는 카드가 도착할 때쯤 실제 카드가 나타나도록
 
     // ---------- utils ----------
     function escapeHtml(s) {
@@ -171,12 +176,13 @@
         if (opts.disabled) cls.push('disabled');
         if (opts.anim) cls.push('card-play-anim');
         const click = (opts.onClick && !opts.disabled) ? `onclick="${opts.onClick}"` : '';
+        const styleAttr = opts.anim ? ` style="--play-delay:${opts.delay || 0}s"` : '';
 
         const inner = isSpecial
             ? `<div class="card-icon">${SPECIAL_ICON[card.rank] || ''}</div><div class="card-name">${SPECIAL_NAME[card.rank] || card.rank}</div>`
             : `<div class="card-corner">${card.rank}${suitSymbol(card.suit)}</div><div class="card-suit-big">${suitSymbol(card.suit)}</div>`;
 
-        return `<div class="${cls.join(' ')}" ${click} data-card-id="${card.id}">${inner}</div>`;
+        return `<div class="${cls.join(' ')}"${styleAttr} ${click} data-card-id="${card.id}">${inner}</div>`;
     }
     function showToast(msg, variant) {
         const el = document.createElement('div');
@@ -214,6 +220,38 @@
         ], { duration: 450, easing: 'ease-in-out' });
         anim.onfinish = () => fly.remove();
     }
+    function animatePlayMove(fromSeat, cards) {
+        const fromEl = document.querySelector('.round-table .seat-pos.' + seatPosClass(fromSeat));
+        const centerEl = document.querySelector('.round-table .center-play');
+        if (!fromEl || !centerEl || !cards || cards.length === 0) return;
+
+        const fromRect = fromEl.getBoundingClientRect();
+        const toRect = centerEl.getBoundingClientRect();
+        const fromX = fromRect.left + fromRect.width / 2;
+        const fromY = fromRect.top + fromRect.height / 2;
+        const dx = (toRect.left + toRect.width / 2) - fromX;
+        const dy = (toRect.top + toRect.height / 2) - fromY;
+        const durationMs = PLAY_ANIM_DELAY * 1000;
+
+        cards.forEach((card, i) => {
+            const wrap = document.createElement('div');
+            wrap.innerHTML = renderCard(card, { small: true });
+            const cardEl = wrap.firstElementChild;
+            cardEl.style.position = 'fixed';
+            cardEl.style.left = (fromX - 27) + 'px';
+            cardEl.style.top = (fromY - 37) + 'px';
+            cardEl.style.zIndex = 3000;
+            cardEl.style.pointerEvents = 'none';
+            cardEl.style.cursor = 'default';
+            document.body.appendChild(cardEl);
+
+            const anim = cardEl.animate([
+                { transform: 'translate(0px, 0px) scale(0.85)', opacity: 1 },
+                { transform: `translate(${dx}px, ${dy}px) scale(1)`, opacity: 1 }
+            ], { duration: durationMs, easing: 'ease-out', delay: i * 40 });
+            anim.onfinish = () => cardEl.remove();
+        });
+    }
     function tichuButtonsHtml(me, allowGrand) {
         if (!me) return '';
         if (me.tichuCall === 'Grand') return `<span class="badge text-bg-warning align-self-center">⚡ 라지 티츄 콜!</span>`;
@@ -234,8 +272,15 @@
         .build();
 
     connection.on("RoomState", s => {
+        const prevPlayKey = lastAnimatedPlayKey;
         state = s;
         render();
+
+        if (prevPlayKey !== null && lastAnimatedPlayKey !== prevPlayKey
+            && s.status === 'Playing' && s.phase === 'Playing' && !s.dragonTrickPending
+            && s.lastPlay && s.lastPlay.length > 0 && s.lastPlayerSeat != null) {
+            animatePlayMove(s.lastPlayerSeat, s.lastPlay);
+        }
 
         if (s.status === 'Playing') {
             s.players.forEach(p => {
@@ -551,7 +596,7 @@
         const playKey = state.lastPlay.map(c => c.id).join(',') + '#' + state.lastPlayerSeat;
         const shouldAnimatePlay = state.lastPlay.length > 0 && playKey !== lastAnimatedPlayKey;
         lastAnimatedPlayKey = playKey;
-        const lastPlayHtml = state.lastPlay.map(c => renderCard(c, { small: true, anim: shouldAnimatePlay })).join('');
+        const lastPlayHtml = state.lastPlay.map(c => renderCard(c, { small: true, anim: shouldAnimatePlay, delay: PLAY_ANIM_DELAY })).join('');
         const lastPlayerName = state.lastPlayerSeat != null
             ? (state.players.find(p => p.seat === state.lastPlayerSeat)?.nickname ?? '')
             : '';
