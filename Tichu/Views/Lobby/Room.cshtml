@@ -12,6 +12,11 @@
 
 <div id="toasts"></div>
 
+<button id="chatToggleBtn" class="chat-toggle-btn" onclick="toggleChatPanel()" title="채팅 보기" type="button">
+    💬<span id="chatBadge" class="chat-badge" style="display:none">0</span>
+</button>
+<div id="chatPanelOverlay" class="chat-panel-overlay" style="display:none"></div>
+
 <div class="modal fade" id="helpModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content">
@@ -21,50 +26,54 @@
             </div>
             <div class="modal-body">
                 <h6>🎯 목표</h6>
-                <p>2:2 팀전이에요 (좌석 0·2번 = A팀, 1·3번 = B팀, 항상 맞은편이 내 파트너). 상대팀보다 먼저 <strong>목표 점수</strong>에 도달하면 승리!</p>
+                <p>2:2 팀 게임이에요. <strong>나와 마주보고 앉은 사람이 내 편(파트너)!</strong> 우리 팀이 상대 팀보다 먼저 목표 점수에 도달하면 승리해요.</p>
 
-                <h6>🃏 카드 구성 &amp; 점수</h6>
+                <h6>🃏 카드 알아보기</h6>
                 <ul>
-                    <li>숫자 카드 2~10, J, Q, K, A (4가지 무늬)</li>
-                    <li>특수카드 4장: <strong>🀄 마작</strong>(가장 낮음, 값 1) · <strong>🔥 불사조</strong> · <strong>🐶 도그</strong> · <strong>🐉 드래곤</strong>(가장 강함)</li>
-                    <li>점수가 있는 카드: 5(5점), 10·K(10점), 드래곤(25점), 불사조(-25점) — 트릭을 이긴 쪽이 그 카드들의 점수를 가져가요</li>
+                    <li>숫자 카드: 2~10, J, Q, K, A</li>
+                    <li>특수 카드 4장: <strong>🀄 마작</strong>(제일 약함) · <strong>🔥 불사조</strong>(마법카드) · <strong>🐶 도그</strong>(마법카드) · <strong>🐉 드래곤</strong>(제일 강함)</li>
+                    <li>점수 카드: 5(5점) · 10·K(각 10점) · 🐉드래곤(25점) · 🔥불사조(-25점) → <strong>트릭을 이긴 사람</strong>이 이 점수를 가져가요</li>
                 </ul>
 
-                <h6>🔁 진행 순서</h6>
-                <p>매 라운드마다 <strong>마작을 가진 사람이 첫 트릭을 리드</strong>하고, 이후 나 → 오른쪽 → 파트너(맞은편) → 왼쪽 순서(반시계 방향)로 턴이 돌아갑니다.</p>
+                <h6>🔁 게임 순서 (쉽게 정리!)</h6>
+                <ol>
+                    <li>모두에게 카드 14장씩 나눠줘요</li>
+                    <li><strong>카드 교환</strong>: 왼쪽·오른쪽·파트너에게 각 1장씩 보내요 (3장 보내고 3장 받아요)</li>
+                    <li>🀄 <strong>마작 카드를 가진 사람부터 시작</strong>, 이후 순서대로 돌아가며 카드를 내요</li>
+                    <li>카드를 다 낸 순서대로 등수가 매겨지고, 3명이 다 내면 라운드 종료!</li>
+                    <li>점수를 계산하고 다음 라운드로 → 목표 점수에 도달할 때까지 반복</li>
+                </ol>
 
-                <h6>🀄 카드 교환</h6>
-                <p>라운드 시작 시 14장을 받은 뒤, 왼쪽/파트너/오른쪽에게 각 1장씩 골라서 보내요. 다들 보내고 나면 받은 카드가 섞여서 플레이가 시작됩니다.</p>
-
-                <h6>🃏 낼 수 있는 조합</h6>
+                <h6>▶️ 카드 내는 방법</h6>
+                <p>내 차례에는 <strong>직전 카드보다 더 센 같은 종류의 카드</strong>를 내거나, 패스할 수 있어요. (테이블이 비어있을 땐 아무 조합이나 자유롭게 낼 수 있어요)</p>
                 <ul>
-                    <li><strong>싱글</strong> (카드 1장)</li>
-                    <li><strong>페어</strong> (같은 숫자 2장), <strong>트리플</strong> (같은 숫자 3장)</li>
-                    <li><strong>풀하우스</strong> (트리플 + 페어), <strong>연속 페어</strong> (숫자가 이어지는 페어 여러 개)</li>
-                    <li><strong>스트레이트</strong> (숫자가 이어지는 5장 이상)</li>
-                    <li><strong>폭탄</strong>: 같은 숫자 4장, 또는 같은 무늬로 이어지는 5장 이상 — 어떤 조합이든 이길 수 있어요 (단, 자기 차례일 때만 낼 수 있음)</li>
-                </ul>
-                <p class="text-muted small">이전에 나온 패와 같은 종류·같은 장수이면서 더 높은 값이어야 낼 수 있어요. 리드할 때(테이블이 비어있을 때)는 아무 조합이나 자유롭게 낼 수 있습니다.</p>
-
-                <h6>✨ 특수 카드</h6>
-                <ul>
-                    <li><strong>🀄 마작</strong> — 가장 낮은 카드(값 1). 이 카드를 가진 사람이 매 라운드 첫 트릭을 리드해요.</li>
-                    <li><strong>🔥 불사조</strong> — 싱글로 낼 때 직전 카드보다 딱 0.5만큼 세게 이겨요 (예: K 위에 내면 13.5급이라 다음 사람이 A로 다시 이길 수 있어요). 리드할 때는 아주 약한 카드로 취급돼요.</li>
-                    <li><strong>🐶 도그</strong> — 트릭을 리드할 때만 낼 수 있고, 점수 없이 바로 파트너에게 턴이 넘어가요.</li>
-                    <li><strong>🐉 드래곤</strong> — 싱글 중 가장 강함. 이 카드로 트릭을 이기면 그 트릭의 점수를 <strong>상대팀 중 한 명</strong>에게 줘야 해요.</li>
+                    <li><strong>싱글</strong> — 1장</li>
+                    <li><strong>페어</strong> — 같은 숫자 2장 / <strong>트리플</strong> — 같은 숫자 3장</li>
+                    <li><strong>풀하우스</strong> — 트리플 + 페어</li>
+                    <li><strong>연속 페어</strong> — 숫자가 이어지는 페어 여러 개</li>
+                    <li><strong>스트레이트</strong> — 숫자가 5개 이상 이어짐</li>
+                    <li><strong>💣 폭탄</strong> — 같은 숫자 4장, 또는 같은 무늬로 이어지는 5장 이상. 뭐든 다 이기는 필살기예요!</li>
                 </ul>
 
-                <h6>❗ 티츄 콜</h6>
+                <h6>✨ 특수 카드 사용법</h6>
                 <ul>
-                    <li><strong>❗ 티츄 (스몰 티츄)</strong> — 카드 교환 단계부터 내 첫 카드를 내기 전까지 언제든 선언 가능. 내가 손패를 가장 먼저 다 내면 <strong>+100점</strong>, 아니면 <strong>-100점</strong>.</li>
-                    <li><strong>⚡ 라지 티츄</strong> — 카드 교환을 제출하기 전에만 선언 가능. 성공하면 <strong>+200점</strong>, 실패하면 <strong>-200점</strong>.</li>
+                    <li><strong>🀄 마작</strong> — 가장 약한 카드. 이 카드를 가진 사람이 라운드를 시작해요.</li>
+                    <li><strong>🔥 불사조</strong> — 싱글로 낼 때 직전 카드보다 아주 살짝만 더 세요. (예: K 다음에 내면 → 다음 사람이 A로 다시 이길 수 있어요)</li>
+                    <li><strong>🐶 도그</strong> — 내 차례가 새로 시작될 때만 낼 수 있고, 내면 바로 파트너 차례로 넘어가요.</li>
+                    <li><strong>🐉 드래곤</strong> — 싱글 중 제일 강함. 이걸로 이기면 그 판 점수는 <strong>상대 팀에게</strong> 줘야 해요 (우리 팀은 가질 수 없어요!)</li>
                 </ul>
 
-                <h6>🏁 라운드 끝</h6>
-                <p>손패를 다 낸 순서대로 등수가 매겨지고, 3명이 끝나면 라운드가 종료돼요. 마지막 남은 사람의 손패 점수는 상대팀에게, 그 사람이 그동안 모은 트릭 점수는 1등에게 넘어갑니다. 만약 <strong>1등과 2등이 같은 팀</strong>이면 "더블 승"으로 그 팀이 바로 <strong>200점</strong>을 가져가요.</p>
+                <h6>❗ 티츄 외치기 (보너스 점수 찬스!)</h6>
+                <ul>
+                    <li><strong>❗ 티츄</strong> — 카드 교환 후부터 내 첫 카드를 내기 전까지 외칠 수 있어요. 손패를 가장 먼저 다 내면 <strong>+100점</strong>, 아니면 <strong>-100점</strong>.</li>
+                    <li><strong>⚡ 라지 티츄</strong> — 카드 교환 전에만 외칠 수 있어요. 성공하면 <strong>+200점</strong>, 실패하면 <strong>-200점</strong>.</li>
+                </ul>
+
+                <h6>🏁 라운드가 끝나면?</h6>
+                <p>손패를 다 낸 순서로 등수가 매겨져요. <strong>1등과 2등이 같은 팀</strong>이면 바로 <strong>200점</strong>을 얻는 "더블 승"이 돼요. 꼴찌로 남은 사람의 손패 점수는 상대 팀에게, 그동안 모은 트릭 점수는 1등에게 넘어가요.</p>
 
                 <h6>🤖 사람이 부족하면?</h6>
-                <p>대기실에서 방장이 "AI 봇 추가"로 빈 자리를 채울 수 있어요. 봇은 자동으로 플레이합니다.</p>
+                <p>대기실에서 방장이 <strong>"AI 봇 추가"</strong> 버튼을 누르면 빈 자리를 봇이 채워서 자동으로 플레이해줘요.</p>
             </div>
         </div>
     </div>
@@ -183,6 +192,28 @@
 
     #toasts { position: fixed; bottom: 16px; right: 16px; left: 16px; z-index: 2000; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
     .toast-msg { background: #212529; color: #fff; padding: 10px 16px; border-radius: 6px; font-size: 0.92rem; box-shadow: 0 2px 6px rgba(0,0,0,0.3); max-width: 100%; }
+
+    .chat-toggle-btn {
+        position: fixed; top: 12px; right: 12px; z-index: 1900;
+        width: 46px; height: 46px; border-radius: 50%; border: none;
+        background: #0d6efd; color: #fff; font-size: 1.3rem;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.35); cursor: pointer;
+    }
+    .chat-badge {
+        position: absolute; top: -4px; right: -4px; min-width: 19px; height: 19px;
+        background: #dc3545; color: #fff; border-radius: 10px; font-size: 0.68rem; font-weight: 800;
+        display: flex; align-items: center; justify-content: center; padding: 0 4px;
+        box-shadow: 0 0 0 2px #fff;
+    }
+    .chat-panel-overlay {
+        position: fixed; top: 66px; right: 12px; bottom: 12px; width: 320px; max-width: calc(100vw - 24px);
+        z-index: 1890; background: #fff; border-radius: 12px; overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.35); display: flex; flex-direction: column;
+    }
+    @@media (max-width: 576px) {
+        .chat-panel-overlay { top: 62px; right: 8px; left: 8px; bottom: 8px; width: auto; max-width: none; }
+    }
     .toast-tichu { background: linear-gradient(135deg, #dc3545, #f59e0b); font-weight: 800; font-size: 1.1rem; padding: 14px 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
 
     /* 버튼/카드 등 터치 영역을 넉넉하게 */
@@ -202,6 +233,8 @@
     let state = null;
     let chatLog = [];
     let chatDraft = '';
+    let chatPanelOpen = false;
+    let chatUnread = 0;
     let selectedCardIds = new Set();
     let exchangeAssign = {};       // cardId -> toSeat
     let exchangeSelectedCard = null;
@@ -427,7 +460,11 @@
             restartTurnTimer();
         }
     });
-    connection.on("ChatMessage", (nick, text) => { chatLog.push({ nick, text }); render(); });
+    connection.on("ChatMessage", (nick, text) => {
+        chatLog.push({ nick, text });
+        if (!chatPanelOpen) chatUnread++;
+        renderChatOverlay();
+    });
     connection.on("ErrorMessage", showToast);
 
     async function start() {
@@ -495,6 +532,12 @@
         connection.invoke('AddBot', ROOM_ID, USER_ID).then(() => showToast('AI 봇을 추가했습니다.')).catch(console.error);
     }
 
+    function toggleChatPanel() {
+        chatPanelOpen = !chatPanelOpen;
+        if (chatPanelOpen) chatUnread = 0;
+        renderChatOverlay();
+    }
+
     // ---------- turn timer (visual only, server enforces the real timeout) ----------
     function restartTurnTimer() {
         if (timerInterval) clearInterval(timerInterval);
@@ -525,14 +568,12 @@
                 <div id="roomHeader"></div>
                 <div id="statusBanner"></div>
                 <div id="phaseArea"></div>
-                <div id="chatArea"></div>
             `;
         }
 
         renderHeader();
         renderStatusBanner();
         renderPhaseArea();
-        renderChatArea();
     }
 
     function renderHeader() {
@@ -558,12 +599,42 @@
             : '';
     }
 
-    function renderChatArea() {
-        const el = document.getElementById('chatArea');
+    function renderChatOverlay() {
+        const overlay = document.getElementById('chatPanelOverlay');
+        if (!overlay) return;
+
+        const badge = document.getElementById('chatBadge');
+        if (badge) {
+            if (chatUnread > 0) {
+                badge.style.display = 'flex';
+                badge.textContent = chatUnread > 99 ? '99+' : chatUnread;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        overlay.style.display = chatPanelOpen ? 'flex' : 'none';
+        if (!chatPanelOpen) return;
+
         const chatWasFocused = document.activeElement && document.activeElement.id === 'chatInput';
         const chatCursor = chatWasFocused ? document.activeElement.selectionStart : null;
 
-        el.innerHTML = renderChatPanel();
+        overlay.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center px-2 py-2 border-bottom bg-light">
+                <strong class="small">💬 채팅 / 로그</strong>
+                <button type="button" class="btn-close" onclick="toggleChatPanel()" aria-label="닫기"></button>
+            </div>
+            <div id="chatBox" class="small p-2 flex-grow-1" style="overflow-y:auto;">
+                ${chatLog.length ? chatLog.map(m => `<div class="mb-1"><strong>${escapeHtml(m.nick)}:</strong> ${escapeHtml(m.text)}</div>`).join('') : '<div class="text-muted">아직 메시지가 없어요.</div>'}
+            </div>
+            <div class="input-group input-group-sm p-2 border-top">
+                <input id="chatInput" type="text" class="form-control" placeholder="메시지 입력 후 Enter"
+                       value="${escapeHtml(chatDraft)}"
+                       oninput="chatDraft=this.value"
+                       onkeydown="if(event.key==='Enter'){sendChat();}" />
+                <button class="btn btn-outline-primary" onclick="sendChat()">전송</button>
+            </div>
+        `;
 
         const cb = document.getElementById('chatBox');
         if (cb) cb.scrollTop = cb.scrollHeight;
@@ -574,24 +645,6 @@
                 if (chatCursor != null) input.setSelectionRange(chatCursor, chatCursor);
             }
         }
-    }
-
-    function renderChatPanel() {
-        return `<div class="card mt-3">
-            <div class="card-header py-2">채팅 / 로그</div>
-            <div class="card-body p-2">
-                <div id="chatBox" class="small mb-2" style="height:130px; overflow-y:auto;">
-                    ${chatLog.map(m => `<div><strong>${escapeHtml(m.nick)}:</strong> ${escapeHtml(m.text)}</div>`).join('')}
-                </div>
-                <div class="input-group input-group-sm">
-                    <input id="chatInput" type="text" class="form-control" placeholder="메시지 입력 후 Enter"
-                           value="${escapeHtml(chatDraft)}"
-                           oninput="chatDraft=this.value"
-                           onkeydown="if(event.key==='Enter'){sendChat();}" />
-                    <button class="btn btn-outline-primary" onclick="sendChat()">전송</button>
-                </div>
-            </div>
-        </div>`;
     }
 
     function renderPhaseArea() {

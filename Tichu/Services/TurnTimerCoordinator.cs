@@ -183,6 +183,14 @@ namespace Tichu.Services
                 return;
             }
 
+            // 같은 팀(파트너)이 이미 이기고 있는 판이면 굳이 빼앗지 않고 패스 (파트너에게 리드를 넘겨줌)
+            bool partnerIsWinning = game.LastPlayerSeat.HasValue && game.LastPlayerSeat.Value % 2 == bot.Seat % 2;
+            if (partnerIsWinning)
+            {
+                _engine.Pass(room, bot.UserId);
+                return;
+            }
+
             int needed = game.LastPlay.Count;
             double lastMax = needed == 1 ? _engine.GetEffectiveLastSingleValue(game) : game.LastPlay.Max(c => c.RankValue);
             List<Card>? candidate = null;
