@@ -194,6 +194,26 @@ namespace Tichu.Services
             }
         }
 
+        /// <summary>실제 사람(봇 아님)이 한 명이라도 연결되어 있는지</summary>
+        public bool HasConnectedHuman(GameRoom room)
+        {
+            lock (room.Lock)
+            {
+                return room.Players.Any(p => !p.IsBot && p.IsConnected);
+            }
+        }
+
+        /// <summary>방을 즉시 제거한다. 진행 중이던 게임/타이머/봇 루프도 멈추도록 상태를 Abandoned로 바꾼다.</summary>
+        public GameRoom? DeleteRoom(int roomId)
+        {
+            if (_rooms.TryRemove(roomId, out var room))
+            {
+                lock (room.Lock) { room.Status = RoomStatus.Abandoned; }
+                return room;
+            }
+            return null;
+        }
+
         public List<RoomListItemDto> GetRoomListDtos()
         {
             return GetRooms().Select(r => new RoomListItemDto

@@ -4,7 +4,8 @@ namespace Tichu.Models
     {
         Waiting,
         Playing,
-        Ended
+        Ended,
+        Abandoned  // 실제 유저가 모두 나가서 정리된 방 (봇만 남아 무한 진행되는 것을 막기 위함)
     }
 
     public class GameRoom

@@ -61,7 +61,15 @@ namespace Tichu.Hub
             var room = _roomService.LeaveRoom(roomId, userId);
             if (room != null)
             {
-                await _broadcaster.BroadcastRoomAsync(room);
+                if (!_roomService.HasConnectedHuman(room))
+                {
+                    _timers.Stop(room.Id);
+                    _roomService.DeleteRoom(room.Id);
+                }
+                else
+                {
+                    await _broadcaster.BroadcastRoomAsync(room);
+                }
             }
             await _broadcaster.BroadcastLobbyAsync();
         }
@@ -181,15 +189,28 @@ namespace Tichu.Hub
                 var player = room.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId);
                 if (player != null)
                 {
+                    GameRoom? remaining;
                     if (room.Status == RoomStatus.Waiting)
                     {
-                        var updated = _roomService.LeaveRoom(room.Id, player.UserId);
-                        if (updated != null) await _broadcaster.BroadcastRoomAsync(updated);
+                        remaining = _roomService.LeaveRoom(room.Id, player.UserId);
                     }
                     else
                     {
                         lock (room.Lock) { player.IsConnected = false; }
-                        await _broadcaster.BroadcastRoomAsync(room);
+                        remaining = room;
+                    }
+
+                    if (remaining != null)
+                    {
+                        if (!_roomService.HasConnectedHuman(remaining))
+                        {
+                            _timers.Stop(remaining.Id);
+                            _roomService.DeleteRoom(remaining.Id);
+                        }
+                        else
+                        {
+                            await _broadcaster.BroadcastRoomAsync(remaining);
+                        }
                     }
                     await _broadcaster.BroadcastLobbyAsync();
                 }

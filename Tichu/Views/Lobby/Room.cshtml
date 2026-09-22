@@ -12,6 +12,64 @@
 
 <div id="toasts"></div>
 
+<div class="modal fade" id="helpModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">🃏 티츄 하는 법</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+            </div>
+            <div class="modal-body">
+                <h6>🎯 목표</h6>
+                <p>2:2 팀전이에요 (좌석 0·2번 = A팀, 1·3번 = B팀, 항상 맞은편이 내 파트너). 상대팀보다 먼저 <strong>목표 점수</strong>에 도달하면 승리!</p>
+
+                <h6>🃏 카드 구성 &amp; 점수</h6>
+                <ul>
+                    <li>숫자 카드 2~10, J, Q, K, A (4가지 무늬)</li>
+                    <li>특수카드 4장: <strong>🀄 마작</strong>(가장 낮음, 값 1) · <strong>🔥 불사조</strong> · <strong>🐶 도그</strong> · <strong>🐉 드래곤</strong>(가장 강함)</li>
+                    <li>점수가 있는 카드: 5(5점), 10·K(10점), 드래곤(25점), 불사조(-25점) — 트릭을 이긴 쪽이 그 카드들의 점수를 가져가요</li>
+                </ul>
+
+                <h6>🔁 진행 순서</h6>
+                <p>매 라운드마다 <strong>마작을 가진 사람이 첫 트릭을 리드</strong>하고, 이후 나 → 오른쪽 → 파트너(맞은편) → 왼쪽 순서(반시계 방향)로 턴이 돌아갑니다.</p>
+
+                <h6>🀄 카드 교환</h6>
+                <p>라운드 시작 시 14장을 받은 뒤, 왼쪽/파트너/오른쪽에게 각 1장씩 골라서 보내요. 다들 보내고 나면 받은 카드가 섞여서 플레이가 시작됩니다.</p>
+
+                <h6>🃏 낼 수 있는 조합</h6>
+                <ul>
+                    <li><strong>싱글</strong> (카드 1장)</li>
+                    <li><strong>페어</strong> (같은 숫자 2장), <strong>트리플</strong> (같은 숫자 3장)</li>
+                    <li><strong>풀하우스</strong> (트리플 + 페어), <strong>연속 페어</strong> (숫자가 이어지는 페어 여러 개)</li>
+                    <li><strong>스트레이트</strong> (숫자가 이어지는 5장 이상)</li>
+                    <li><strong>폭탄</strong>: 같은 숫자 4장, 또는 같은 무늬로 이어지는 5장 이상 — 어떤 조합이든 이길 수 있어요 (단, 자기 차례일 때만 낼 수 있음)</li>
+                </ul>
+                <p class="text-muted small">이전에 나온 패와 같은 종류·같은 장수이면서 더 높은 값이어야 낼 수 있어요. 리드할 때(테이블이 비어있을 때)는 아무 조합이나 자유롭게 낼 수 있습니다.</p>
+
+                <h6>✨ 특수 카드</h6>
+                <ul>
+                    <li><strong>🀄 마작</strong> — 가장 낮은 카드(값 1). 이 카드를 가진 사람이 매 라운드 첫 트릭을 리드해요.</li>
+                    <li><strong>🔥 불사조</strong> — 싱글로 낼 때 직전 카드보다 딱 0.5만큼 세게 이겨요 (예: K 위에 내면 13.5급이라 다음 사람이 A로 다시 이길 수 있어요). 리드할 때는 아주 약한 카드로 취급돼요.</li>
+                    <li><strong>🐶 도그</strong> — 트릭을 리드할 때만 낼 수 있고, 점수 없이 바로 파트너에게 턴이 넘어가요.</li>
+                    <li><strong>🐉 드래곤</strong> — 싱글 중 가장 강함. 이 카드로 트릭을 이기면 그 트릭의 점수를 <strong>상대팀 중 한 명</strong>에게 줘야 해요.</li>
+                </ul>
+
+                <h6>❗ 티츄 콜</h6>
+                <ul>
+                    <li><strong>❗ 티츄 (스몰 티츄)</strong> — 카드 교환 단계부터 내 첫 카드를 내기 전까지 언제든 선언 가능. 내가 손패를 가장 먼저 다 내면 <strong>+100점</strong>, 아니면 <strong>-100점</strong>.</li>
+                    <li><strong>⚡ 라지 티츄</strong> — 카드 교환을 제출하기 전에만 선언 가능. 성공하면 <strong>+200점</strong>, 실패하면 <strong>-200점</strong>.</li>
+                </ul>
+
+                <h6>🏁 라운드 끝</h6>
+                <p>손패를 다 낸 순서대로 등수가 매겨지고, 3명이 끝나면 라운드가 종료돼요. 마지막 남은 사람의 손패 점수는 상대팀에게, 그 사람이 그동안 모은 트릭 점수는 1등에게 넘어갑니다. 만약 <strong>1등과 2등이 같은 팀</strong>이면 "더블 승"으로 그 팀이 바로 <strong>200점</strong>을 가져가요.</p>
+
+                <h6>🤖 사람이 부족하면?</h6>
+                <p>대기실에서 방장이 "AI 봇 추가"로 빈 자리를 채울 수 있어요. 봇은 자동으로 플레이합니다.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
 
 <style>
@@ -152,6 +210,7 @@
     let lastAnimatedPlayKey = null;
     let lastDogMoveSeq = null;
     let knownTichuCalls = {};
+    let lastHandAreaKey = null;    // 손패 영역은 내용이 실제로 바뀔 때만 다시 그려서 깜빡임(호버 등) 방지
     const PLAY_ANIM_DELAY = 0.28; // 초 - 날아가는 카드가 도착할 때쯤 실제 카드가 나타나도록
 
     // ---------- utils ----------
@@ -263,6 +322,71 @@
             html += ` <button class="btn btn-outline-warning btn-sm" onclick="callGrandTichu()">⚡ 라지 티츄</button>`;
         }
         return html;
+    }
+
+    // ---------- 클라이언트 측 조합 판정 (서버가 최종 판단, 여기선 미리보기용) ----------
+    function isStraightClient(sorted) {
+        if (sorted.some(c => c.suit === 'Special' && c.rank !== 'Mahjong')) return false;
+        for (let i = 1; i < sorted.length; i++) if (sorted[i].rankValue - sorted[i - 1].rankValue !== 1) return false;
+        return true;
+    }
+    function isFullHouseClient(sorted) {
+        const groups = {};
+        sorted.forEach(c => groups[c.rankValue] = (groups[c.rankValue] || 0) + 1);
+        const counts = Object.values(groups);
+        return counts.length === 2 && counts.includes(3);
+    }
+    function isPairSequenceClient(sorted) {
+        const groups = {};
+        sorted.forEach(c => groups[c.rankValue] = (groups[c.rankValue] || 0) + 1);
+        const keys = Object.keys(groups).map(Number).sort((a, b) => a - b);
+        if (keys.some(k => groups[k] !== 2)) return false;
+        if (sorted.some(c => c.suit === 'Special')) return false;
+        for (let i = 1; i < keys.length; i++) if (keys[i] - keys[i - 1] !== 1) return false;
+        return true;
+    }
+    function isBombStraightClient(sorted) {
+        if (sorted.length < 5) return false;
+        const suit = sorted[0].suit;
+        if (suit === 'Special') return false;
+        if (!sorted.every(c => c.suit === suit)) return false;
+        return isStraightClient(sorted);
+    }
+    function detectComboClient(cards) {
+        if (!cards || cards.length === 0) return 'None';
+        const sorted = [...cards].sort((a, b) => a.rankValue - b.rankValue);
+        const n = sorted.length;
+        const allSameRank = sorted.every(c => c.rankValue === sorted[0].rankValue);
+        if (n === 1) return 'Single';
+        if (n === 2 && allSameRank) return 'Pair';
+        if (n === 3 && allSameRank) return 'Triple';
+        if (n === 4 && allSameRank) return 'BombFour';
+        if (n === 5 && isFullHouseClient(sorted)) return 'FullHouse';
+        if (n >= 5 && isBombStraightClient(sorted)) return 'BombStraight';
+        if (n >= 4 && n % 2 === 0 && isPairSequenceClient(sorted)) return 'PairSequence';
+        if (n >= 5 && isStraightClient(sorted)) return 'Straight';
+        return 'None';
+    }
+    function isBombClient(t) { return t === 'BombFour' || t === 'BombStraight'; }
+    function isStrongerClient(current, previous) {
+        const curType = detectComboClient(current);
+        const prevType = detectComboClient(previous);
+        if (curType === 'None') return false;
+        if (prevType === 'None') return true;
+        if (curType === prevType) {
+            if (current.length !== previous.length) return false;
+            const curMax = Math.max(...current.map(c => c.rankValue));
+            const prevMax = Math.max(...previous.map(c => c.rankValue));
+            return curMax > prevMax;
+        }
+        if (isBombClient(curType) && !isBombClient(prevType)) return true;
+        if (!isBombClient(curType) && isBombClient(prevType)) return false;
+        if (isBombClient(curType) && isBombClient(prevType)) {
+            const pr = t => t === 'BombStraight' ? 2 : 1;
+            if (pr(curType) !== pr(prevType)) return pr(curType) > pr(prevType);
+            return Math.max(...current.map(c => c.rankValue)) > Math.max(...previous.map(c => c.rankValue));
+        }
+        return false;
     }
 
     // ---------- SignalR ----------
@@ -389,42 +513,60 @@
     }
 
     // ---------- render ----------
+    // #app은 처음 한 번만 5개의 고정 컨테이너로 채우고, 이후에는 각 컨테이너만 개별적으로
+    // 갱신한다. 특히 #handCard는 내용이 실제로 바뀔 때만 다시 그려서, 다른 플레이어의
+    // 행동(패스 등)마다 내 손패 전체가 재생성되며 생기던 깜빡임/호버 튐 현상을 없앤다.
     function render() {
         const app = document.getElementById('app');
         if (!state) return;
 
-        const chatWasFocused = document.activeElement && document.activeElement.id === 'chatInput';
-        const chatCursor = chatWasFocused ? document.activeElement.selectionStart : null;
+        if (!document.getElementById('roomHeader')) {
+            app.innerHTML = `
+                <div id="roomHeader"></div>
+                <div id="statusBanner"></div>
+                <div id="phaseArea"></div>
+                <div id="chatArea"></div>
+            `;
+        }
 
-        let body;
-        if (state.status === 'Waiting') body = renderWaitingRoom();
-        else if (state.status === 'Playing') {
-            if (state.phase === 'Exchange') body = renderExchange();
-            else if (state.phase === 'Playing') body = renderGameTable();
-            else body = renderRoundEnd();
-        } else body = renderGameEnd();
+        renderHeader();
+        renderStatusBanner();
+        renderPhaseArea();
+        renderChatArea();
+    }
 
+    function renderHeader() {
         const teamA = state.teamScores ? state.teamScores[0] : 0;
         const teamB = state.teamScores ? state.teamScores[1] : 0;
-
-        app.innerHTML = `
+        document.getElementById('roomHeader').innerHTML = `
             <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
                 <h5 class="m-0">🃏 ${escapeHtml(state.roomName)} <span class="text-muted small">#${state.roomId}</span></h5>
                 <div class="d-flex gap-2 align-items-center flex-wrap">
                     <span class="badge text-bg-secondary">목표 ${state.targetScore}점</span>
                     <span class="badge text-bg-info">A팀 ${teamA} : ${teamB} B팀</span>
                     <span class="badge text-bg-light text-dark border">나: ${escapeHtml(NICKNAME)}</span>
+                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#helpModal">❓ 도움말</button>
                     <button class="btn btn-sm btn-outline-danger" onclick="leaveRoom()">나가기</button>
                 </div>
             </div>
-            ${state.lastMessage ? `<div class="alert alert-light border py-2 mb-2">${escapeHtml(state.lastMessage)}</div>` : ''}
-            ${body}
-            ${renderChatPanel()}
         `;
+    }
+
+    function renderStatusBanner() {
+        document.getElementById('statusBanner').innerHTML = state.lastMessage
+            ? `<div class="alert alert-light border py-2 mb-2">${escapeHtml(state.lastMessage)}</div>`
+            : '';
+    }
+
+    function renderChatArea() {
+        const el = document.getElementById('chatArea');
+        const chatWasFocused = document.activeElement && document.activeElement.id === 'chatInput';
+        const chatCursor = chatWasFocused ? document.activeElement.selectionStart : null;
+
+        el.innerHTML = renderChatPanel();
 
         const cb = document.getElementById('chatBox');
         if (cb) cb.scrollTop = cb.scrollHeight;
-
         if (chatWasFocused) {
             const input = document.getElementById('chatInput');
             if (input) {
@@ -450,6 +592,38 @@
                 </div>
             </div>
         </div>`;
+    }
+
+    function renderPhaseArea() {
+        const phaseArea = document.getElementById('phaseArea');
+
+        if (state.status === 'Waiting') {
+            phaseArea.innerHTML = renderWaitingRoom();
+            lastHandAreaKey = null;
+            return;
+        }
+        if (state.status !== 'Playing') {
+            phaseArea.innerHTML = renderGameEnd();
+            lastHandAreaKey = null;
+            return;
+        }
+        if (state.phase === 'RoundEnd') {
+            phaseArea.innerHTML = renderRoundEnd();
+            lastHandAreaKey = null;
+            return;
+        }
+
+        // Exchange / Playing: 테이블과 손패를 분리된 컨테이너로 관리
+        if (!document.getElementById('tableCard') || !document.getElementById('handCard')) {
+            phaseArea.innerHTML = `<div id="tableCard"></div><div id="handCard"></div>`;
+        }
+
+        const parts = state.phase === 'Exchange' ? buildExchangeParts() : buildGameTableParts();
+        document.getElementById('tableCard').innerHTML = parts.tableHtml;
+        if (parts.handKey !== lastHandAreaKey) {
+            document.getElementById('handCard').innerHTML = parts.handHtml;
+            lastHandAreaKey = parts.handKey;
+        }
     }
 
     function renderWaitingRoom() {
@@ -481,7 +655,7 @@
                     ${IS_HOST && state.players.length < 4 ? `<button class="btn btn-outline-secondary" onclick="addBot()">🤖 AI 봇 추가</button>` : ''}
                     ${IS_HOST ? `<button class="btn btn-success" ${allReady ? '' : 'disabled'} onclick="startGame()">게임 시작</button>` : ''}
                 </div>
-                ${!allReady ? '<div class="text-muted small mt-2">4명이 모두 입장하고 준비를 완료해야 시작할 수 있습니다. (0,2번 좌석 = A팀, 1,3번 좌석 = B팀). 사람이 부족하면 AI 봇으로 채워도 됩니다. 마작을 가진 사람이 매 라운드 첫 트릭을 시작합니다.</div>' : ''}
+                ${!allReady ? '<div class="text-muted small mt-2">4명이 모두 입장하고 준비를 완료해야 시작할 수 있습니다. (0,2번 좌석 = A팀, 1,3번 좌석 = B팀). 사람이 부족하면 AI 봇으로 채워도 됩니다. 마작을 가진 사람이 매 라운드 첫 트릭을 시작합니다. 하는 법이 궁금하면 위쪽 "도움말"을 눌러보세요.</div>' : ''}
             </div>
         </div>`;
     }
@@ -510,7 +684,7 @@
         </div>`;
     }
 
-    function renderExchange() {
+    function buildExchangeParts() {
         const mySeat = state.mySeat;
         const submitted = state.exchangeSubmittedSeats.includes(mySeat);
         const me = state.players.find(p => p.userId === USER_ID);
@@ -523,7 +697,7 @@
 
         const assignedIds = Object.keys(exchangeAssign).map(Number);
         const handCards = state.myHand.filter(c => !assignedIds.includes(c.id));
-        const handHtml = submitted
+        const cardsHtml = submitted
             ? state.myHand.map(c => renderCard(c, { disabled: true })).join('')
             : handCards.map(c => renderCard(c, {
                 selected: exchangeSelectedCard === c.id,
@@ -535,7 +709,7 @@
             ? `제출 완료! 다른 플레이어를 기다리는 중 (${state.exchangeSubmittedSeats.length}/4)`
             : '카드를 선택하고 보낼 자리를 눌러 배정하세요';
 
-        return `<div class="card mb-2">
+        const tableHtml = `<div class="card mb-2">
             <div class="card-body p-2">
                 <p class="text-muted small mb-1 mt-1">라지 티츄는 교환을 제출하기 전에만 부를 수 있어요.</p>
                 <div class="round-table">
@@ -546,8 +720,9 @@
                     <div class="center-play"><div class="center-label">${centerLabel}</div></div>
                 </div>
             </div>
-        </div>
-        <div class="card">
+        </div>`;
+
+        const handHtml = `<div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                     <h6 class="m-0">내 손패 (${submitted ? state.myHand.length : handCards.length + '장 남음 / 전체 ' + state.myHand.length}장)</h6>
@@ -556,9 +731,14 @@
                         <button class="btn btn-success btn-sm" ${readyToSubmit && !submitted ? '' : 'disabled'} onclick="submitExchange()">교환 제출</button>
                     </div>
                 </div>
-                <div class="hand-row">${handHtml}</div>
+                <div class="hand-row">${cardsHtml}</div>
             </div>
         </div>`;
+
+        const handKey = ['exch', state.myHand.map(c => c.id).join(','), JSON.stringify(exchangeAssign),
+            exchangeSelectedCard, submitted, me?.tichuCall, state.exchangeSubmittedSeats.length].join('|');
+
+        return { tableHtml, handHtml, handKey };
     }
 
     function seatSlot(seat, posClass) {
@@ -582,7 +762,7 @@
         </div>`;
     }
 
-    function renderGameTable() {
+    function buildGameTableParts() {
         const mySeat = state.mySeat;
         // 하단=나, 반시계방향(나 -> 오른쪽 -> 파트너(상단) -> 왼쪽 -> 나)으로 턴이 돕니다.
         const topSeat = (mySeat + 2) % 4;   // 파트너
@@ -634,15 +814,7 @@
             }
         }
 
-        const handHtml = state.myHand.map(c => renderCard(c, {
-            selected: selectedCardIds.has(c.id),
-            onClick: `toggleCardSelect(${c.id})`,
-            disabled: finished
-        })).join('');
-
-        const tichuBtns = tichuButtonsHtml(me, false);
-
-        return `
+        const tableHtml = `
         <div class="card mb-2">
             <div class="card-body p-2">
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -664,7 +836,34 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div>`;
+
+        // ---- 낼 수 있는지 미리 확인 (서버가 최종 판단하지만 선제적으로 안내) ----
+        const selectedCards = state.myHand.filter(c => selectedCardIds.has(c.id));
+        const comboType = detectComboClient(selectedCards);
+        let canPlay = false;
+        let hint = '';
+        if (myTurn && selectedCards.length > 0) {
+            if (comboType === 'None') {
+                hint = '⚠️ 낼 수 없는 조합이에요 (같은 숫자끼리, 또는 5장 이상 이어지는 조합만 가능)';
+            } else if (state.lastPlay.length > 0 && !isStrongerClient(selectedCards, state.lastPlay)) {
+                hint = (!isBombClient(comboType) && selectedCards.length !== state.lastPlay.length)
+                    ? `⚠️ ${state.lastPlay.length}장을 내야 해요`
+                    : '⚠️ 이전 패보다 약해요';
+            } else {
+                canPlay = true;
+            }
+        }
+
+        const cardsHtml = state.myHand.map(c => renderCard(c, {
+            selected: selectedCardIds.has(c.id),
+            onClick: `toggleCardSelect(${c.id})`,
+            disabled: finished
+        })).join('');
+
+        const tichuBtns = tichuButtonsHtml(me, false);
+
+        const handHtml = `
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
@@ -672,13 +871,20 @@
                     <div class="d-flex gap-2 flex-wrap">
                         ${tichuBtns}
                         <button class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">선택 해제</button>
-                        <button class="btn btn-sm btn-success" ${myTurn && selectedCardIds.size > 0 ? '' : 'disabled'} onclick="playSelected()">내기</button>
+                        <button class="btn btn-sm btn-success" ${myTurn && canPlay ? '' : 'disabled'} onclick="playSelected()">내기</button>
                         <button class="btn btn-sm btn-outline-dark" ${myTurn && state.lastPlay.length > 0 ? '' : 'disabled'} onclick="passTurn()">패스</button>
                     </div>
                 </div>
-                <div class="hand-row">${finished ? '<span class="text-muted">이번 라운드를 마쳤습니다. 결과를 기다려주세요.</span>' : handHtml}</div>
+                ${hint ? `<div class="text-danger small fw-bold mb-1">${hint}</div>` : ''}
+                <div class="hand-row">${finished ? '<span class="text-muted">이번 라운드를 마쳤습니다. 결과를 기다려주세요.</span>' : cardsHtml}</div>
             </div>
         </div>`;
+
+        const handKey = ['play', state.myHand.map(c => c.id).join(','),
+            [...selectedCardIds].sort((a, b) => a - b).join(','), myTurn, state.lastPlay.length,
+            finished, me?.tichuCall, canPlay, hint].join('|');
+
+        return { tableHtml, handHtml, handKey };
     }
 
     function renderRoundEnd() {
