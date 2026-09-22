@@ -193,11 +193,13 @@
     #toasts { position: fixed; bottom: 16px; right: 16px; left: 16px; z-index: 2000; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
     .toast-msg { background: #212529; color: #fff; padding: 10px 16px; border-radius: 6px; font-size: 0.92rem; box-shadow: 0 2px 6px rgba(0,0,0,0.3); max-width: 100%; }
 
+    /* 채팅 플로팅 버튼/오버레이는 모바일 전용 (PC에서는 항상 숨김) */
     .chat-toggle-btn {
+        display: none;
         position: fixed; top: 12px; right: 12px; z-index: 1900;
         width: 46px; height: 46px; border-radius: 50%; border: none;
         background: #0d6efd; color: #fff; font-size: 1.3rem;
-        display: flex; align-items: center; justify-content: center;
+        align-items: center; justify-content: center;
         box-shadow: 0 2px 8px rgba(0,0,0,0.35); cursor: pointer;
     }
     .chat-badge {
@@ -207,12 +209,13 @@
         box-shadow: 0 0 0 2px #fff;
     }
     .chat-panel-overlay {
-        position: fixed; top: 66px; right: 12px; bottom: 12px; width: 320px; max-width: calc(100vw - 24px);
+        position: fixed; top: 62px; right: 8px; left: 8px; bottom: 8px;
         z-index: 1890; background: #fff; border-radius: 12px; overflow: hidden;
         box-shadow: 0 4px 20px rgba(0,0,0,0.35); display: flex; flex-direction: column;
     }
     @@media (max-width: 576px) {
-        .chat-panel-overlay { top: 62px; right: 8px; left: 8px; bottom: 8px; width: auto; max-width: none; }
+        .chat-toggle-btn { display: flex; }
+        .chat-inline-panel { display: none !important; }
     }
     .toast-tichu { background: linear-gradient(135deg, #dc3545, #f59e0b); font-weight: 800; font-size: 1.1rem; padding: 14px 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
 
@@ -463,6 +466,7 @@
     connection.on("ChatMessage", (nick, text) => {
         chatLog.push({ nick, text });
         if (!chatPanelOpen) chatUnread++;
+        renderChatArea();
         renderChatOverlay();
     });
     connection.on("ErrorMessage", showToast);
@@ -525,8 +529,10 @@
         if (!text) return;
         connection.invoke('SendChat', ROOM_ID, USER_ID, text).catch(console.error);
         chatDraft = '';
-        const input = document.getElementById('chatInput');
-        if (input) { input.value = ''; input.focus(); }
+        const inputs = document.querySelectorAll('.chat-msg-input');
+        inputs.forEach(inp => { inp.value = ''; });
+        const visible = [...inputs].find(inp => inp.offsetParent !== null);
+        if (visible) visible.focus();
     }
     function addBot() {
         connection.invoke('AddBot', ROOM_ID, USER_ID).then(() => showToast('AI 봇을 추가했습니다.')).catch(console.error);
@@ -568,12 +574,14 @@
                 <div id="roomHeader"></div>
                 <div id="statusBanner"></div>
                 <div id="phaseArea"></div>
+                <div id="chatArea"></div>
             `;
         }
 
         renderHeader();
         renderStatusBanner();
         renderPhaseArea();
+        renderChatArea();
     }
 
     function renderHeader() {
@@ -599,6 +607,39 @@
             : '';
     }
 
+    function renderChatArea() {
+        const el = document.getElementById('chatArea');
+        if (!el) return;
+        const chatWasFocused = document.activeElement && document.activeElement.id === 'chatInputDesktop';
+        const chatCursor = chatWasFocused ? document.activeElement.selectionStart : null;
+
+        el.innerHTML = `<div class="card mt-3 chat-inline-panel">
+            <div class="card-header py-2">채팅 / 로그</div>
+            <div class="card-body p-2">
+                <div id="chatBoxDesktop" class="small mb-2" style="height:130px; overflow-y:auto;">
+                    ${chatLog.map(m => `<div><strong>${escapeHtml(m.nick)}:</strong> ${escapeHtml(m.text)}</div>`).join('')}
+                </div>
+                <div class="input-group input-group-sm">
+                    <input id="chatInputDesktop" type="text" class="form-control chat-msg-input" placeholder="메시지 입력 후 Enter"
+                           value="${escapeHtml(chatDraft)}"
+                           oninput="chatDraft=this.value"
+                           onkeydown="if(event.key==='Enter'){sendChat();}" />
+                    <button class="btn btn-outline-primary" onclick="sendChat()">전송</button>
+                </div>
+            </div>
+        </div>`;
+
+        const cb = document.getElementById('chatBoxDesktop');
+        if (cb) cb.scrollTop = cb.scrollHeight;
+        if (chatWasFocused) {
+            const input = document.getElementById('chatInputDesktop');
+            if (input) {
+                input.focus();
+                if (chatCursor != null) input.setSelectionRange(chatCursor, chatCursor);
+            }
+        }
+    }
+
     function renderChatOverlay() {
         const overlay = document.getElementById('chatPanelOverlay');
         if (!overlay) return;
@@ -616,7 +657,7 @@
         overlay.style.display = chatPanelOpen ? 'flex' : 'none';
         if (!chatPanelOpen) return;
 
-        const chatWasFocused = document.activeElement && document.activeElement.id === 'chatInput';
+        const chatWasFocused = document.activeElement && document.activeElement.id === 'chatInputMobile';
         const chatCursor = chatWasFocused ? document.activeElement.selectionStart : null;
 
         overlay.innerHTML = `
@@ -624,11 +665,11 @@
                 <strong class="small">💬 채팅 / 로그</strong>
                 <button type="button" class="btn-close" onclick="toggleChatPanel()" aria-label="닫기"></button>
             </div>
-            <div id="chatBox" class="small p-2 flex-grow-1" style="overflow-y:auto;">
+            <div id="chatBoxMobile" class="small p-2 flex-grow-1" style="overflow-y:auto;">
                 ${chatLog.length ? chatLog.map(m => `<div class="mb-1"><strong>${escapeHtml(m.nick)}:</strong> ${escapeHtml(m.text)}</div>`).join('') : '<div class="text-muted">아직 메시지가 없어요.</div>'}
             </div>
             <div class="input-group input-group-sm p-2 border-top">
-                <input id="chatInput" type="text" class="form-control" placeholder="메시지 입력 후 Enter"
+                <input id="chatInputMobile" type="text" class="form-control chat-msg-input" placeholder="메시지 입력 후 Enter"
                        value="${escapeHtml(chatDraft)}"
                        oninput="chatDraft=this.value"
                        onkeydown="if(event.key==='Enter'){sendChat();}" />
@@ -636,10 +677,10 @@
             </div>
         `;
 
-        const cb = document.getElementById('chatBox');
+        const cb = document.getElementById('chatBoxMobile');
         if (cb) cb.scrollTop = cb.scrollHeight;
         if (chatWasFocused) {
-            const input = document.getElementById('chatInput');
+            const input = document.getElementById('chatInputMobile');
             if (input) {
                 input.focus();
                 if (chatCursor != null) input.setSelectionRange(chatCursor, chatCursor);
