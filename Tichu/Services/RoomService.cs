@@ -230,7 +230,7 @@ namespace Tichu.Services
                         IsBot = p.IsBot,
                         IsConnected = p.IsConnected,
                         HandCount = p.Hand.Count,
-                        CalledTichu = p.CalledTichu,
+                        TichuCall = p.TichuCall.ToString(),
                         HasFinished = p.HasFinishedThisRound,
                         FinishPosition = p.FinishPosition
                     }).ToList()

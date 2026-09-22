@@ -118,6 +118,11 @@ namespace Tichu.Hub
             await RunEngineAction(roomId, room => _engine.CallTichu(room, userId));
         }
 
+        public async Task CallGrandTichu(int roomId, string userId)
+        {
+            await RunEngineAction(roomId, room => _engine.CallGrandTichu(room, userId));
+        }
+
         public async Task SubmitExchange(int roomId, string userId, List<ExchangePickDto> picks)
         {
             var list = (picks ?? new List<ExchangePickDto>()).Select(p => (p.CardId, p.ToSeat)).ToList();

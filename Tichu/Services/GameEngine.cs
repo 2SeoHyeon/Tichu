@@ -63,7 +63,7 @@ namespace Tichu.Services
             foreach (var p in room.Players)
             {
                 p.Hand = dealt[p.Seat];
-                p.CalledTichu = false;
+                p.TichuCall = TichuCallType.None;
                 p.HasActedThisRound = false;
                 p.HasFinishedThisRound = false;
                 p.FinishPosition = -1;
@@ -71,17 +71,35 @@ namespace Tichu.Services
             }
         }
 
+        /// <summary>스몰 티츄: 카드 교환 단계부터 자신의 첫 카드를 내기 전까지 언제든 선언 가능 (±100점)</summary>
         public string? CallTichu(GameRoom room, string userId)
         {
             var game = room.Game;
             if (game == null) return "게임이 없습니다.";
             var player = room.Players.FirstOrDefault(p => p.UserId == userId);
             if (player == null) return "플레이어를 찾을 수 없습니다.";
-            if (player.CalledTichu) return "이미 티츄를 불렀습니다.";
+            if (player.TichuCall != TichuCallType.None) return "이미 티츄를 불렀습니다.";
             if (player.HasActedThisRound || player.Hand.Count != 14) return "카드를 내기 전(14장을 그대로 들고 있을 때)에만 티츄를 부를 수 있습니다.";
 
-            player.CalledTichu = true;
+            player.TichuCall = TichuCallType.Small;
             game.LastMessage = $"{player.Nickname}님이 티츄를 외쳤습니다!";
+            return null;
+        }
+
+        /// <summary>라지(그랜드) 티츄: 카드 교환을 제출하기 전에만 선언 가능 (±200점)</summary>
+        public string? CallGrandTichu(GameRoom room, string userId)
+        {
+            var game = room.Game;
+            if (game == null) return "게임이 없습니다.";
+            if (game.Phase != GamePhase.Exchange) return "라지 티츄는 카드 교환 전에만 부를 수 있습니다.";
+
+            var player = room.Players.FirstOrDefault(p => p.UserId == userId);
+            if (player == null) return "플레이어를 찾을 수 없습니다.";
+            if (player.TichuCall != TichuCallType.None) return "이미 티츄를 불렀습니다.";
+            if (game.PendingExchange.ContainsKey(player.Seat)) return "라지 티츄는 카드 교환을 제출하기 전에만 부를 수 있습니다.";
+
+            player.TichuCall = TichuCallType.Grand;
+            game.LastMessage = $"{player.Nickname}님이 라지 티츄를 외쳤습니다!";
             return null;
         }
 
@@ -147,9 +165,10 @@ namespace Tichu.Services
             game.PendingExchange.Clear();
             game.Phase = GamePhase.Playing;
 
-            var leader = room.Players.First(p => p.Hand.Any(c => c.Rank == "Mahjong"));
+            // 방장이 항상 라운드의 첫 트릭을 리드한다
+            var leader = room.Players.First(p => p.IsHost);
             game.CurrentTurnSeat = leader.Seat;
-            game.LastMessage = $"{leader.Nickname}님부터 시작합니다 (마작 보유).";
+            game.LastMessage = $"{leader.Nickname}님(방장)부터 시작합니다.";
         }
 
         public string? PlayCards(GameRoom room, string userId, List<int> cardIds)
@@ -384,14 +403,15 @@ namespace Tichu.Services
 
             foreach (var p in room.Players)
             {
-                if (p.CalledTichu)
-                {
-                    int bonus = p.FinishPosition == 0 ? 100 : -100;
-                    game.TeamScores[p.TeamId] += bonus;
-                    note += p.FinishPosition == 0
-                        ? $" / {p.Nickname} 티츄 성공 +100"
-                        : $" / {p.Nickname} 티츄 실패 -100";
-                }
+                if (p.TichuCall == TichuCallType.None) continue;
+
+                int points = p.TichuCall == TichuCallType.Grand ? 200 : 100;
+                string label = p.TichuCall == TichuCallType.Grand ? "라지 티츄" : "티츄";
+                int bonus = p.FinishPosition == 0 ? points : -points;
+                game.TeamScores[p.TeamId] += bonus;
+                note += p.FinishPosition == 0
+                    ? $" / {p.Nickname} {label} 성공 +{points}"
+                    : $" / {p.Nickname} {label} 실패 -{points}";
             }
 
             game.History.Add(new RoundLogEntry

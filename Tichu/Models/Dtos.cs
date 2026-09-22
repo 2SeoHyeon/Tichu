@@ -21,7 +21,7 @@ namespace Tichu.Models
         public bool IsBot { get; set; }
         public bool IsConnected { get; set; } = true;
         public int HandCount { get; set; }
-        public bool CalledTichu { get; set; }
+        public string TichuCall { get; set; } = "None";
         public bool HasFinished { get; set; }
         public int FinishPosition { get; set; } = -1;
     }

@@ -1,5 +1,12 @@
 namespace Tichu.Models
 {
+    public enum TichuCallType
+    {
+        None,
+        Small,  // 스몰 티츄: 교환 단계부터 첫 카드를 내기 전까지 선언 가능, ±100점
+        Grand   // 라지(그랜드) 티츄: 교환하기 전에만 선언 가능, ±200점
+    }
+
     public class Player
     {
         public string UserId { get; set; } = "";
@@ -19,7 +26,7 @@ namespace Tichu.Models
 
         // ---- 라운드별 게임 상태 (서버 전용, 클라이언트로는 절대 그대로 보내지 않음) ----
         public List<Card> Hand { get; set; } = new();
-        public bool CalledTichu { get; set; }
+        public TichuCallType TichuCall { get; set; } = TichuCallType.None;
         public bool HasActedThisRound { get; set; }
         public bool HasFinishedThisRound { get; set; }
         public int FinishPosition { get; set; } = -1; // 0=1등 ...
