@@ -16,8 +16,8 @@
 
 <style>
     .tichu-card {
-        width: 60px; height: 84px;
-        border-radius: 9px; background: #fff; border: 1px solid #d0d0d0;
+        width: 74px; height: 102px;
+        border-radius: 10px; background: #fff; border: 1px solid #d0d0d0;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         position: relative; cursor: pointer; user-select: none;
         box-shadow: 0 2px 4px rgba(0,0,0,0.18);
@@ -25,49 +25,50 @@
         flex-shrink: 0;
     }
     .tichu-card:not(.disabled):hover { box-shadow: 0 3px 6px rgba(0,0,0,0.25); }
-    .tichu-card.selected { border-color: #0d6efd; border-width: 2px; box-shadow: 0 0 0 3px rgba(13,110,253,0.3); }
+    .tichu-card.selected { border-color: #0d6efd; border-width: 3px; box-shadow: 0 0 0 4px rgba(13,110,253,0.35); }
     .tichu-card.disabled { cursor: default; opacity: 0.5; }
 
-    .tichu-card .card-corner { position: absolute; top: 4px; left: 6px; font-size: 0.72rem; font-weight: 800; line-height: 1.1; }
-    .tichu-card .card-suit-big { font-size: 1.8rem; }
+    .tichu-card .card-corner { position: absolute; top: 5px; left: 7px; font-size: 0.9rem; font-weight: 800; line-height: 1.1; }
+    .tichu-card .card-suit-big { font-size: 2.2rem; }
     .tichu-card.text-danger .card-corner, .tichu-card.text-danger .card-suit-big { color: #dc3545; }
     .tichu-card.text-dark .card-corner, .tichu-card.text-dark .card-suit-big { color: #212529; }
 
-    .tichu-card.special { color: #fff; text-align: center; gap: 2px; border: none; }
-    .tichu-card.special .card-icon { font-size: 1.6rem; line-height: 1; }
-    .tichu-card.special .card-name { font-size: 0.6rem; font-weight: 700; }
+    .tichu-card.special { color: #fff; text-align: center; gap: 3px; border: none; }
+    .tichu-card.special .card-icon { font-size: 1.9rem; line-height: 1; }
+    .tichu-card.special .card-name { font-size: 0.72rem; font-weight: 700; }
     .tichu-card.special.dragon { background: linear-gradient(150deg, #b91c1c, #f59e0b); }
     .tichu-card.special.phoenix { background: linear-gradient(150deg, #f97316, #ec4899); }
     .tichu-card.special.dog { background: linear-gradient(150deg, #0284c7, #64748b); }
     .tichu-card.special.mahjong { background: linear-gradient(150deg, #16a34a, #65a30d); }
 
-    .tichu-card.small-card { width: 42px; height: 58px; }
-    .tichu-card.small-card .card-corner { font-size: 0.6rem; top: 3px; left: 4px; }
-    .tichu-card.small-card .card-suit-big { font-size: 1.2rem; }
-    .tichu-card.small-card .card-icon { font-size: 1.1rem; }
-    .tichu-card.small-card .card-name { font-size: 0.48rem; }
+    .tichu-card.small-card { width: 54px; height: 74px; }
+    .tichu-card.small-card .card-corner { font-size: 0.72rem; top: 4px; left: 5px; }
+    .tichu-card.small-card .card-suit-big { font-size: 1.5rem; }
+    .tichu-card.small-card .card-icon { font-size: 1.3rem; }
+    .tichu-card.small-card .card-name { font-size: 0.56rem; }
 
     .round-table {
-        position: relative; width: 100%; max-width: 620px; height: 380px;
-        margin: 30px auto 40px;
+        position: relative; width: 100%; max-width: 660px; height: 400px;
+        margin: 34px auto 46px;
         background: radial-gradient(ellipse at center, #2f7d55 0%, #1c4a34 100%);
         border-radius: 50%;
         border: 10px solid #6b4423;
         box-shadow: inset 0 0 50px rgba(0,0,0,0.45), 0 4px 14px rgba(0,0,0,0.3);
     }
-    @@media (max-width: 576px) { .round-table { height: 300px; margin: 24px auto 34px; } }
+    @@media (max-width: 576px) { .round-table { height: 320px; margin: 28px auto 40px; } }
 
-    .seat-pos { position: absolute; width: 150px; text-align: center; }
-    .seat-pos.seat-bottom { bottom: -22px; left: 50%; transform: translateX(-50%); }
-    .seat-pos.seat-top { top: -22px; left: 50%; transform: translateX(-50%); }
+    .seat-pos { position: absolute; width: 170px; text-align: center; }
+    .seat-pos.seat-bottom { bottom: -26px; left: 50%; transform: translateX(-50%); }
+    .seat-pos.seat-top { top: -26px; left: 50%; transform: translateX(-50%); }
     .seat-pos.seat-left { left: -14px; top: 50%; transform: translateY(-50%); }
     .seat-pos.seat-right { right: -14px; top: 50%; transform: translateY(-50%); }
-    @@media (max-width: 576px) { .seat-pos { width: 120px; } }
+    @@media (max-width: 576px) { .seat-pos { width: 132px; } }
 
-    .player-slot { border-radius: 10px; padding: 6px 8px; text-align: center; background: rgba(255,255,255,0.95); box-shadow: 0 1px 4px rgba(0,0,0,0.25); font-size: 0.8rem; }
-    .player-slot.active-turn { outline: 3px solid #ffc107; box-shadow: 0 0 0 4px rgba(255,193,7,0.35); }
+    .player-slot { border-radius: 10px; padding: 8px 10px; text-align: center; background: rgba(255,255,255,0.95); box-shadow: 0 1px 4px rgba(0,0,0,0.25); font-size: 0.92rem; color: #212529; }
+    .player-slot.active-turn { outline: 4px solid #ffc107; box-shadow: 0 0 0 5px rgba(255,193,7,0.4); }
     .player-slot.disconnected { opacity: 0.5; }
-    .player-slot.me { outline: 2px solid #0d6efd; }
+    .player-slot.me { outline: 3px solid #0d6efd; }
+    .player-slot .slot-sub { font-size: 0.82rem; color: #495057; margin-top: 2px; }
 
     .center-play {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -75,26 +76,33 @@
         max-width: 80%;
     }
     .center-label {
-        position: absolute; top: -28px; left: 50%; transform: translateX(-50%);
-        color: #eafff2; font-size: 0.72rem; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+        position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
+        color: #eafff2; font-size: 0.85rem; font-weight: 700; white-space: nowrap; text-shadow: 0 1px 3px rgba(0,0,0,0.7);
     }
 
+    .turn-banner {
+        text-align: center; font-weight: 800; font-size: 1.15rem; padding: 12px; border-radius: 10px;
+        margin-bottom: 10px; background: #e9ecef; color: #343a40;
+    }
+    .turn-banner.mine { background: #198754; color: #fff; }
+    @@media (max-width: 576px) { .turn-banner { font-size: 1rem; padding: 10px; } }
+
     .exchange-slot-mini {
-        min-height: 48px; min-width: 40px; margin: 4px auto 0; border: 2px dashed #bbb; border-radius: 8px;
-        display: flex; align-items: center; justify-content: center; cursor: pointer; color: #999; font-size: 0.68rem;
-        background: rgba(255,255,255,0.6);
+        min-height: 60px; min-width: 56px; margin: 6px auto 0; border: 2px dashed #bbb; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center; cursor: pointer; color: #555; font-size: 0.78rem; font-weight: 600;
+        background: rgba(255,255,255,0.7);
     }
     .exchange-slot-mini:not(.empty) { border-style: solid; border-color: #0d6efd; background: transparent; }
 
     .hand-row {
-        display: flex; flex-wrap: nowrap; align-items: flex-end; padding: 8px 4px 4px;
+        display: flex; flex-wrap: nowrap; align-items: flex-end; padding: 10px 4px 4px;
     }
-    .hand-row .tichu-card { margin-left: -22px; }
+    .hand-row .tichu-card { margin-left: -28px; }
     .hand-row .tichu-card:first-child { margin-left: 0; }
     .hand-row .tichu-card.selected { z-index: 5; }
     @@media (max-width: 576px) {
-        .hand-row { flex-wrap: wrap; row-gap: 14px; }
-        .hand-row .tichu-card { margin-left: -26px; }
+        .hand-row { flex-wrap: wrap; row-gap: 16px; }
+        .hand-row .tichu-card { margin-left: -30px; }
         .hand-row .tichu-card:first-child { margin-left: 0; }
     }
 
@@ -105,15 +113,22 @@
     .card-play-anim { animation: playDrop 0.25s ease-out; }
 
     .ready-icon {
-        position: absolute; top: -10px; right: -10px; font-size: 1.4rem;
-        background: #fff; border-radius: 50%; width: 30px; height: 30px;
+        position: absolute; top: -12px; right: -12px; font-size: 1.7rem;
+        background: #fff; border-radius: 50%; width: 38px; height: 38px;
         display: flex; align-items: center; justify-content: center;
         box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
 
-    #toasts { position: fixed; bottom: 16px; right: 16px; z-index: 2000; display: flex; flex-direction: column; gap: 6px; }
-    .toast-msg { background: #212529; color: #fff; padding: 8px 14px; border-radius: 6px; font-size: 0.85rem; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
-    .toast-tichu { background: linear-gradient(135deg, #dc3545, #f59e0b); font-weight: 800; font-size: 1.05rem; padding: 12px 22px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+    #toasts { position: fixed; bottom: 16px; right: 16px; left: 16px; z-index: 2000; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+    .toast-msg { background: #212529; color: #fff; padding: 10px 16px; border-radius: 6px; font-size: 0.92rem; box-shadow: 0 2px 6px rgba(0,0,0,0.3); max-width: 100%; }
+    .toast-tichu { background: linear-gradient(135deg, #dc3545, #f59e0b); font-weight: 800; font-size: 1.1rem; padding: 14px 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+
+    /* 버튼/카드 등 터치 영역을 넉넉하게 */
+    .btn-sm { padding: 0.5rem 1rem; font-size: 0.95rem; min-height: 42px; }
+    .btn:not(.btn-sm) { min-height: 46px; font-size: 1rem; }
+    @@media (max-width: 576px) {
+        .btn-sm { min-height: 46px; font-size: 1rem; }
+    }
 </style>
 
 <script>
@@ -357,7 +372,7 @@
                     <button class="btn btn-sm btn-outline-danger" onclick="leaveRoom()">나가기</button>
                 </div>
             </div>
-            ${state.lastMessage ? `<div class="alert alert-light border py-2 small mb-2">${escapeHtml(state.lastMessage)}</div>` : ''}
+            ${state.lastMessage ? `<div class="alert alert-light border py-2 mb-2">${escapeHtml(state.lastMessage)}</div>` : ''}
             ${body}
             ${renderChatPanel()}
         `;
@@ -516,7 +531,7 @@
         return `<div class="seat-pos ${posClass}">
             <div class="${cls.join(' ')}">
                 <div class="fw-bold">${p.isBot ? '🤖 ' : ''}${escapeHtml(p.nickname)}${p.isHost ? ' 👑' : ''}${tichuBadge}</div>
-                <div class="small text-muted">${p.hasFinished ? `완료 · ${p.finishPosition + 1}등` : `${p.handCount}장`}</div>
+                <div class="slot-sub">${p.hasFinished ? `완료 · ${p.finishPosition + 1}등` : `${p.handCount}장`}</div>
                 ${isTurn ? '<div class="small text-success fw-bold">👉 차례</div>' : ''}
             </div>
         </div>`;
@@ -543,6 +558,18 @@
         const centerLabel = state.lastPlay.length === 0
             ? '자유롭게 리드'
             : (lastPlayerName ? `이전 패 · ${escapeHtml(lastPlayerName)}` : '이전 패');
+
+        let turnBanner = '';
+        if (!state.dragonTrickPending) {
+            if (finished) {
+                turnBanner = `<div class="turn-banner">✅ 이번 라운드를 마쳤습니다. 결과를 기다려주세요.</div>`;
+            } else if (myTurn) {
+                turnBanner = `<div class="turn-banner mine">🎯 내 차례입니다!</div>`;
+            } else {
+                const turnPlayer = state.players.find(p => p.seat === state.currentTurnSeat);
+                turnBanner = `<div class="turn-banner">⏳ ${escapeHtml(turnPlayer?.nickname ?? '')}님의 차례</div>`;
+            }
+        }
 
         let dragonPanel = '';
         if (state.dragonTrickPending) {
@@ -579,6 +606,7 @@
                         <div id="turnBar" class="progress-bar bg-success" style="width:100%"></div>
                     </div>
                 </div>
+                ${turnBanner}
                 ${dragonPanel}
                 <div class="round-table">
                     ${seatSlot(topSeat, 'seat-top')}
@@ -604,7 +632,6 @@
                     </div>
                 </div>
                 <div class="hand-row">${finished ? '<span class="text-muted">이번 라운드를 마쳤습니다. 결과를 기다려주세요.</span>' : handHtml}</div>
-                ${!myTurn && !finished ? '<div class="text-muted small mt-2">다른 플레이어의 차례입니다.</div>' : ''}
             </div>
         </div>`;
     }
