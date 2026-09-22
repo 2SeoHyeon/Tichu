@@ -10,6 +10,12 @@ namespace Tichu.Services
     {
         private readonly ConcurrentDictionary<int, GameRoom> _rooms = new();
         private int _nextRoomId = 1000;
+        private readonly GameEngine _engine;
+
+        public RoomService(GameEngine engine)
+        {
+            _engine = engine;
+        }
 
         public List<GameRoom> GetRooms()
         {
@@ -265,6 +271,7 @@ namespace Tichu.Services
                 dto.CurrentTurnSeat = game.CurrentTurnSeat;
                 dto.LastPlay = game.LastPlay.Select(CardDto.From).ToList();
                 dto.LastPlayerSeat = game.LastPlayerSeat;
+                dto.LastPlayEffectiveValue = game.LastPlay.Count == 1 ? _engine.GetEffectiveLastSingleValue(game) : null;
                 dto.DragonTrickPending = game.DragonTrickPending;
                 dto.LastDogFromSeat = game.LastDogFromSeat;
                 dto.LastDogToSeat = game.LastDogToSeat;

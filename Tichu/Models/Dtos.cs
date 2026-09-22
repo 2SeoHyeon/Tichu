@@ -59,6 +59,8 @@ namespace Tichu.Models
         public int CurrentTurnSeat { get; set; }
         public List<CardDto> LastPlay { get; set; } = new();
         public int? LastPlayerSeat { get; set; }
+        // LastPlay가 싱글 1장일 때 실제로 이겨야 할 기준값 (불사조는 직전 카드+0.5, 리드일 땐 1.5)
+        public double? LastPlayEffectiveValue { get; set; }
         public bool DragonTrickPending { get; set; }
         public int? LastDogFromSeat { get; set; }
         public int? LastDogToSeat { get; set; }

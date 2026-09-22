@@ -407,7 +407,7 @@
         return 'None';
     }
     function isBombClient(t) { return t === 'BombFour' || t === 'BombStraight'; }
-    function isStrongerClient(current, previous) {
+    function isStrongerClient(current, previous, previousEffectiveValue) {
         const curType = detectComboClient(current);
         const prevType = detectComboClient(previous);
         if (curType === 'None') return false;
@@ -415,6 +415,11 @@
         if (curType === prevType) {
             if (current.length !== previous.length) return false;
             const curMax = Math.max(...current.map(c => c.rankValue));
+            // 싱글일 때 이전 패가 불사조면 서버가 계산한 실제 기준값(리드=1.5, 다른 카드 위=그 값+0.5)을 써야
+            // "불사조 리드 후 아무것도 못 낸다" 같은 오판정이 없음 (불사조 자체 rankValue만 보면 너무 세보임)
+            if (curType === 'Single' && previousEffectiveValue != null) {
+                return curMax > previousEffectiveValue;
+            }
             const prevMax = Math.max(...previous.map(c => c.rankValue));
             return curMax > prevMax;
         }
@@ -968,7 +973,7 @@
         if (myTurn && selectedCards.length > 0) {
             if (comboType === 'None') {
                 hint = '⚠️ 낼 수 없는 조합이에요 (같은 숫자끼리, 또는 5장 이상 이어지는 조합만 가능)';
-            } else if (state.lastPlay.length > 0 && !isStrongerClient(selectedCards, state.lastPlay)) {
+            } else if (state.lastPlay.length > 0 && !isStrongerClient(selectedCards, state.lastPlay, state.lastPlayEffectiveValue)) {
                 hint = (!isBombClient(comboType) && selectedCards.length !== state.lastPlay.length)
                     ? `⚠️ ${state.lastPlay.length}장을 내야 해요`
                     : '⚠️ 이전 패보다 약해요';
