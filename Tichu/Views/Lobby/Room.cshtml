@@ -8,12 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
 
-<div class="deco-plant" aria-hidden="true">🪴</div>
-<div class="deco-note" aria-hidden="true">좋은 사람들과<br>좋은 게임<br>좋은 시간 :)</div>
-<div class="deco-mug" aria-hidden="true">☕<div class="deco-mug-label">Good<br>Game<br>:)</div></div>
-<div class="deco-books" aria-hidden="true">📚</div>
-
-<div class="container-fluid py-3" style="max-width: 1400px;">
+<div class="container-fluid py-3 px-3 px-xl-4">
     <div id="app" class="game-board">
         <div class="text-center text-muted py-5">서버에 연결하는 중...</div>
     </div>
@@ -126,21 +121,6 @@
        않으므로, 기본적으로 위쪽 구분선을 주고 맨 위(헤더)만 인라인으로 없앰 */
     .board-section { background: transparent; border: none; box-shadow: none; border-radius: 0; padding: 10px 2px; border-top: 1px dashed rgba(138,90,52,0.25); }
 
-    /* 배경 장식 (넓은 데스크톱 화면에서만, 레퍼런스 이미지의 화분/메모/머그컵/책 느낌) */
-    .deco-plant, .deco-note, .deco-mug, .deco-books { position: fixed; pointer-events: none; z-index: 1; opacity: 0.92; }
-    .deco-plant { left: 26px; bottom: 8px; font-size: 4.2rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15)); }
-    .deco-note {
-        left: 40px; bottom: 150px; width: 130px;
-        font-family: 'Gaegu', cursive; font-size: 1.15rem; color: #6b5842;
-        transform: rotate(-5deg); line-height: 1.5;
-    }
-    .deco-mug { right: 40px; bottom: 60px; font-size: 3rem; text-align: center; }
-    .deco-mug-label { font-family: 'Gaegu', cursive; font-size: 0.75rem; color: #6b5842; line-height: 1.2; margin-top: 2px; }
-    .deco-books { right: 26px; bottom: 6px; font-size: 3.4rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15)); }
-    @@media (max-width: 1600px) {
-        .deco-plant, .deco-note, .deco-mug, .deco-books { display: none; }
-    }
-
     /* 접이식(아코디언) 패널: 게임 안내 / 채팅·로그. 데스크톱에서는 항상 펼쳐진 상태로 보여줌.
        판(.game-board) 안에 얹히는 구획이라 불투명한 흰 박스 대신 옅은 반투명 배경만 사용 */
     .acc { border: 1px solid rgba(138,90,52,0.18); border-radius: 14px; background: rgba(255,255,255,0.55); overflow: hidden; }
@@ -206,7 +186,7 @@
     .tichu-card.small-card .card-name { font-size: 0.56rem; }
 
     .round-table {
-        position: relative; width: 100%; max-width: 820px; height: 460px;
+        position: relative; width: 100%; max-width: min(70vw, 1180px); height: 460px;
         margin: 34px auto 46px;
         background: radial-gradient(ellipse at center, #2f7d55 0%, #1c4a34 100%);
         border-radius: 50%;
