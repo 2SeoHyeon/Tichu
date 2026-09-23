@@ -144,6 +144,7 @@
     }
     .player-avatar.is-bot { background: linear-gradient(135deg, #d0bfff, #9775fa); }
     .player-avatar.is-me { background: linear-gradient(135deg, #ffd8a8, #ff922b); }
+    @@media (min-width: 1400px) { .player-avatar { width: 62px; height: 62px; font-size: 1.9rem; } }
 
     /* 카드 뒷면 바코드 스타일 (남은 카드 수를 한눈에) */
     .cardback-bar {
@@ -184,8 +185,18 @@
     .tichu-card.small-card .card-icon { font-size: 1.3rem; }
     .tichu-card.small-card .card-name { font-size: 0.56rem; }
 
+    @@media (min-width: 1400px) {
+        .tichu-card:not(.small-card) { width: 92px; height: 128px; }
+        .tichu-card:not(.small-card) .card-corner { font-size: 1.1rem; }
+        .tichu-card:not(.small-card) .card-suit-big { font-size: 2.7rem; }
+        .tichu-card:not(.small-card).special .card-icon { font-size: 2.3rem; }
+        .tichu-card:not(.small-card).special .card-name { font-size: 0.86rem; }
+        .hand-row .tichu-card { margin-left: -32px; }
+        .hand-row .tichu-card:first-child { margin-left: 0; }
+    }
+
     .round-table {
-        position: relative; width: 100%; max-width: min(70vw, 1180px); height: 460px;
+        position: relative; width: 100%; max-width: min(94vw, 1700px); height: 460px;
         margin: 34px auto 46px;
         /* 페이지 배경 자체가 이미 초록 펠트라서, 원탁은 자체 배경/테두리 없이
            좌석을 배치하는 자리(포지셔닝 컨테이너) 역할만 함 */
@@ -195,6 +206,11 @@
     }
     .round-table .center-play { z-index: 1; }
     @@media (max-width: 576px) { .round-table { height: 360px; margin: 28px auto 40px; } }
+    /* PC 큰 화면에서는 레퍼런스처럼 좌석을 화면 전체에 널찍하게 펼치고
+       아바타/카드 등 요소도 다 같이 크게 키움 ("크게크게 봐야 한다") */
+    @@media (min-width: 1400px) {
+        .round-table { height: 560px; margin: 46px auto 60px; }
+    }
 
     .seat-pos { position: absolute; width: 170px; text-align: center; }
     .seat-pos.seat-bottom { bottom: -26px; left: 50%; transform: translateX(-50%); }
@@ -202,6 +218,7 @@
     .seat-pos.seat-left { left: -14px; top: 50%; transform: translateY(-50%); }
     .seat-pos.seat-right { right: -14px; top: 50%; transform: translateY(-50%); }
     @@media (max-width: 576px) { .seat-pos { width: 132px; } }
+    @@media (min-width: 1400px) { .seat-pos { width: 210px; } }
 
     /* 플레이어 자리: 펠트 위에 바로 뜨는 반투명 검정 알약 (레퍼런스 스타일) */
     .player-slot { position: relative; border-radius: 14px; padding: 10px 12px; text-align: center; background: rgba(0,0,0,0.28); backdrop-filter: blur(2px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-size: 0.92rem; color: #f5fbf2; }
@@ -210,6 +227,11 @@
     .player-slot.me { outline: 3px solid #4dabf7; }
     .player-slot .slot-sub { font-size: 0.82rem; color: rgba(245,251,242,0.85); margin-top: 2px; }
     .player-slot .slot-role { font-size: 0.72rem; color: rgba(245,251,242,0.6); margin-top: -2px; }
+    @@media (min-width: 1400px) {
+        .player-slot { padding: 16px 18px; font-size: 1.12rem; border-radius: 18px; }
+        .player-slot .slot-sub { font-size: 1rem; }
+        .player-slot .slot-role { font-size: 0.88rem; }
+    }
 
     .center-play {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
