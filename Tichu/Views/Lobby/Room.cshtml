@@ -4,6 +4,15 @@
     Layout = "_Layout";
 }
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+
+<div class="deco-plant" aria-hidden="true">🪴</div>
+<div class="deco-note" aria-hidden="true">좋은 사람들과<br>좋은 게임<br>좋은 시간 :)</div>
+<div class="deco-mug" aria-hidden="true">☕<div class="deco-mug-label">Good<br>Game<br>:)</div></div>
+<div class="deco-books" aria-hidden="true">📚</div>
+
 <div class="container-fluid py-3" style="max-width: 1100px;">
     <div id="app">
         <div class="text-center text-muted py-5">서버에 연결하는 중...</div>
@@ -11,11 +20,6 @@
 </div>
 
 <div id="toasts"></div>
-
-<button id="chatToggleBtn" class="chat-toggle-btn" onclick="toggleChatPanel()" title="채팅 보기" type="button">
-    💬<span id="chatBadge" class="chat-badge" style="display:none">0</span>
-</button>
-<div id="chatPanelOverlay" class="chat-panel-overlay" style="display:none"></div>
 
 <div class="modal fade" id="helpModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable modal-lg">
@@ -88,6 +92,67 @@
 <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
 
 <style>
+    :root {
+        --cream-1: #fbf5e9;
+        --cream-2: #f3e7cf;
+        --ink: #4a3f2f;
+        --wood: #8a5a34;
+    }
+    body {
+        background: linear-gradient(180deg, var(--cream-1) 0%, var(--cream-2) 100%);
+        background-attachment: fixed;
+    }
+
+    /* 이 페이지 전체 버튼을 알약(pill) 모양으로 */
+    .btn { border-radius: 999px; font-weight: 700; }
+    .card { border-radius: 16px; border-color: rgba(0,0,0,0.08); }
+    .modal-content { border-radius: 16px; }
+
+    /* 배경 장식 (넓은 데스크톱 화면에서만, 레퍼런스 이미지의 화분/메모/머그컵/책 느낌) */
+    .deco-plant, .deco-note, .deco-mug, .deco-books { position: fixed; pointer-events: none; z-index: 1; opacity: 0.92; }
+    .deco-plant { left: 26px; bottom: 8px; font-size: 4.2rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15)); }
+    .deco-note {
+        left: 40px; bottom: 150px; width: 130px;
+        font-family: 'Gaegu', cursive; font-size: 1.15rem; color: #6b5842;
+        transform: rotate(-5deg); line-height: 1.5;
+    }
+    .deco-mug { right: 40px; bottom: 60px; font-size: 3rem; text-align: center; }
+    .deco-mug-label { font-family: 'Gaegu', cursive; font-size: 0.75rem; color: #6b5842; line-height: 1.2; margin-top: 2px; }
+    .deco-books { right: 26px; bottom: 6px; font-size: 3.4rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15)); }
+    @@media (max-width: 1400px) {
+        .deco-plant, .deco-note, .deco-mug, .deco-books { display: none; }
+    }
+
+    /* 접이식(아코디언) 패널: 게임 안내 / 채팅·로그. 데스크톱에서는 항상 펼쳐진 상태로 보여줌 */
+    .acc { border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; background: #fff; margin-top: 10px; overflow: hidden; }
+    .acc > summary {
+        list-style: none; cursor: pointer; padding: 10px 14px; font-weight: 700; color: var(--ink);
+        display: flex; align-items: center; justify-content: space-between; user-select: none;
+    }
+    .acc > summary::-webkit-details-marker { display: none; }
+    .acc > summary .chev { transition: transform 0.15s ease; font-size: 0.8rem; color: #999; }
+    .acc[open] > summary .chev { transform: rotate(180deg); }
+    .acc-body { padding: 0 14px 14px; }
+    .acc.always-open > summary { cursor: default; pointer-events: none; }
+    .acc.always-open > summary .chev { display: none; }
+
+    /* 플레이어 아바타 (원형 아이콘) */
+    .player-avatar {
+        width: 46px; height: 46px; border-radius: 50%; margin: 0 auto 4px;
+        display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+        background: linear-gradient(135deg, #a5d8ff, #4dabf7); border: 2px solid #fff;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+    }
+    .player-avatar.is-bot { background: linear-gradient(135deg, #d0bfff, #9775fa); }
+    .player-avatar.is-me { background: linear-gradient(135deg, #ffd8a8, #ff922b); }
+
+    /* 카드 뒷면 바코드 스타일 (남은 카드 수를 한눈에) */
+    .cardback-bar {
+        height: 20px; max-width: 100px; margin: 4px auto 0; border-radius: 5px;
+        background-image: repeating-linear-gradient(90deg, #1e3a8a 0px, #1e3a8a 3px, #3b5bdb 3px, #3b5bdb 6px);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5), 0 1px 3px rgba(0,0,0,0.3);
+    }
+
     .tichu-card {
         width: 74px; height: 102px;
         border-radius: 10px; background: #fff; border: 1px solid #d0d0d0;
@@ -128,7 +193,14 @@
         border: 10px solid #6b4423;
         box-shadow: inset 0 0 50px rgba(0,0,0,0.45), 0 4px 14px rgba(0,0,0,0.3);
     }
-    @@media (max-width: 576px) { .round-table { height: 320px; margin: 28px auto 40px; } }
+    .round-table::before {
+        content: '◆ TICHU ◆';
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        color: rgba(255,255,255,0.18); font-size: 1.4rem; font-weight: 800; letter-spacing: 3px;
+        white-space: nowrap; z-index: 0; pointer-events: none;
+    }
+    .round-table .center-play { z-index: 1; }
+    @@media (max-width: 576px) { .round-table { height: 360px; margin: 28px auto 40px; } .round-table::before { font-size: 1.1rem; } }
 
     .seat-pos { position: absolute; width: 170px; text-align: center; }
     .seat-pos.seat-bottom { bottom: -26px; left: 50%; transform: translateX(-50%); }
@@ -137,19 +209,12 @@
     .seat-pos.seat-right { right: -14px; top: 50%; transform: translateY(-50%); }
     @@media (max-width: 576px) { .seat-pos { width: 132px; } }
 
-    .player-slot { border-radius: 10px; padding: 8px 10px; text-align: center; background: rgba(255,255,255,0.95); box-shadow: 0 1px 4px rgba(0,0,0,0.25); font-size: 0.92rem; color: #212529; }
+    .player-slot { border-radius: 14px; padding: 10px 12px; text-align: center; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.15); font-size: 0.92rem; color: #212529; }
     .player-slot.active-turn { outline: 4px solid #ffc107; box-shadow: 0 0 0 5px rgba(255,193,7,0.4); }
     .player-slot.disconnected { opacity: 0.5; }
     .player-slot.me { outline: 3px solid #0d6efd; }
     .player-slot .slot-sub { font-size: 0.82rem; color: #495057; margin-top: 2px; }
-    .mini-cardback-row { display: flex; justify-content: center; height: 20px; margin-top: 4px; }
-    .mini-cardback {
-        width: 13px; height: 18px; border-radius: 3px; margin-left: -8px; flex-shrink: 0;
-        background: linear-gradient(135deg, #1e3a8a, #2563eb);
-        border: 1px solid rgba(255,255,255,0.55);
-        box-shadow: 0 1px 2px rgba(0,0,0,0.35);
-    }
-    .mini-cardback:first-child { margin-left: 0; }
+    .player-slot .slot-role { font-size: 0.72rem; color: #868e96; margin-top: -2px; }
 
     .center-play {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -159,6 +224,9 @@
     .center-label {
         position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
         color: #eafff2; font-size: 0.85rem; font-weight: 700; white-space: nowrap; text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+    }
+    @@media (max-width: 576px) {
+        .center-label { font-size: 0.68rem; white-space: normal; width: 92px; text-align: center; line-height: 1.25; top: -22px; }
     }
 
     .turn-banner {
@@ -207,33 +275,7 @@
     #toasts { position: fixed; bottom: 16px; right: 16px; left: 16px; z-index: 2000; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
     .toast-msg { background: #212529; color: #fff; padding: 10px 16px; border-radius: 6px; font-size: 0.92rem; box-shadow: 0 2px 6px rgba(0,0,0,0.3); max-width: 100%; }
 
-    /* 채팅 플로팅 버튼/오버레이는 모바일 전용 (PC에서는 항상 숨김) */
-    .chat-toggle-btn {
-        display: none;
-        position: fixed; top: 12px; right: 12px; z-index: 1900;
-        width: 46px; height: 46px; border-radius: 50%; border: none;
-        background: #0d6efd; color: #fff; font-size: 1.3rem;
-        align-items: center; justify-content: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.35); cursor: pointer;
-    }
-    .chat-badge {
-        position: absolute; top: -4px; right: -4px; min-width: 19px; height: 19px;
-        background: #dc3545; color: #fff; border-radius: 10px; font-size: 0.68rem; font-weight: 800;
-        display: flex; align-items: center; justify-content: center; padding: 0 4px;
-        box-shadow: 0 0 0 2px #fff;
-    }
-    .chat-panel-overlay {
-        position: fixed; top: 62px; right: 8px; left: 8px; bottom: 8px;
-        z-index: 1890; background: #fff; border-radius: 12px; overflow: hidden;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.35); display: flex; flex-direction: column;
-    }
-    .chat-panel-overlay .chat-msg-input { font-size: 16px; } /* iOS 자동 확대 방지 (16px 미만이면 포커스시 화면이 확대됨) */
-    /* 576px는 실제 폰보다 좁은 경우가 많아 max-width를 768로 넓히고,
-       터치 전용(마우스 hover 불가) 기기는 폭과 무관하게 모바일 UI로 취급 */
-    @@media (max-width: 768px), (hover: none) and (pointer: coarse) {
-        .chat-toggle-btn { display: flex; }
-        .chat-inline-panel { display: none !important; }
-    }
+    .chat-msg-input { font-size: 16px; } /* iOS 자동 확대 방지 (16px 미만이면 포커스시 화면이 확대됨) */
     .toast-tichu { background: linear-gradient(135deg, #dc3545, #f59e0b); font-weight: 800; font-size: 1.1rem; padding: 14px 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
 
     /* 버튼/카드 등 터치 영역을 넉넉하게 */
@@ -253,8 +295,9 @@
     let state = null;
     let chatLog = [];
     let chatDraft = '';
-    let chatPanelOpen = false;
-    let chatUnread = 0;
+    let chatAccOpen = null;  // null = 아직 결정 안 됨 (데스크톱은 항상 열림, 모바일은 기본 닫힘)
+    let chatUnread = 0;      // 접힌 상태일 때 새 메시지 알림 배지용
+    let guideAccOpen = null; // 게임 안내 아코디언도 동일한 방식
     let selectedCardIds = new Set();
     let exchangeAssign = {};       // cardId -> toSeat
     let exchangeSelectedCard = null;
@@ -520,20 +563,6 @@
         return canFulfill ? `⚠️ 마작 소원(${rankLabel(wish)})으로 이길 수 있으면 반드시 그렇게 내야 해요` : '';
     }
 
-    // 도움말 모달이 열려있는 동안은 채팅 플로팅 버튼이 모달의 닫기(X) 버튼 위에 겹쳐서
-    // 닫기를 클릭해도 채팅 버튼이 클릭을 가로채는 문제가 있어, 모달이 열려있는 동안은 숨긴다.
-    const helpModalEl = document.getElementById('helpModal');
-    if (helpModalEl) {
-        helpModalEl.addEventListener('show.bs.modal', () => {
-            const btn = document.getElementById('chatToggleBtn');
-            if (btn) btn.style.display = 'none';
-        });
-        helpModalEl.addEventListener('hidden.bs.modal', () => {
-            const btn = document.getElementById('chatToggleBtn');
-            if (btn) btn.style.removeProperty('display');
-        });
-    }
-
     // ---------- SignalR ----------
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/tichuHub")
@@ -574,9 +603,9 @@
     });
     connection.on("ChatMessage", (nick, text) => {
         chatLog.push({ nick, text });
-        if (!chatPanelOpen) chatUnread++;
+        const isOpen = document.getElementById('chatAccordion')?.open ?? false;
+        if (!isOpen) chatUnread++;
         renderChatArea();
-        renderChatOverlay();
     });
     connection.on("ErrorMessage", showToast);
 
@@ -667,36 +696,6 @@
         connection.invoke('AddBot', ROOM_ID, USER_ID).then(() => showToast('AI 봇을 추가했습니다.')).catch(console.error);
     }
 
-    function toggleChatPanel() {
-        chatPanelOpen = !chatPanelOpen;
-        if (chatPanelOpen) chatUnread = 0;
-        renderChatOverlay();
-        positionChatOverlay();
-    }
-
-    // 모바일 키보드가 열리면 실제 보이는 화면(visual viewport)이 줄어드는데,
-    // position:fixed 요소는 이걸 자동으로 반영하지 않아 입력창이 키보드 뒤로 숨거나
-    // 화면 전체가 밀려 보이는 문제가 생김. visualViewport 크기에 맞춰 패널을 다시 맞춰준다.
-    function positionChatOverlay() {
-        const overlay = document.getElementById('chatPanelOverlay');
-        if (!overlay || !chatPanelOpen) return;
-        const vv = window.visualViewport;
-        if (!vv) return;
-        const topOffset = 62;
-        overlay.style.left = vv.offsetLeft + 8 + 'px';
-        overlay.style.top = (vv.offsetTop + topOffset) + 'px';
-        overlay.style.height = Math.max(160, vv.height - topOffset - 8) + 'px';
-        overlay.style.width = (vv.width - 16) + 'px';
-        overlay.style.bottom = 'auto';
-        overlay.style.right = 'auto';
-        const cb = document.getElementById('chatBoxMobile');
-        if (cb) cb.scrollTop = cb.scrollHeight;
-    }
-    if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', positionChatOverlay);
-        window.visualViewport.addEventListener('scroll', positionChatOverlay);
-    }
-
     // ---------- turn timer (visual only, server enforces the real timeout) ----------
     function restartTurnTimer() {
         if (timerInterval) clearInterval(timerInterval);
@@ -726,6 +725,7 @@
             app.innerHTML = `
                 <div id="roomHeader"></div>
                 <div id="statusBanner"></div>
+                <div id="guideArea"></div>
                 <div id="phaseArea"></div>
                 <div id="chatArea"></div>
             `;
@@ -733,6 +733,7 @@
 
         renderHeader();
         renderStatusBanner();
+        renderGuideArea();
         renderPhaseArea();
         renderChatArea();
     }
@@ -741,14 +742,16 @@
         const teamA = state.teamScores ? state.teamScores[0] : 0;
         const teamB = state.teamScores ? state.teamScores[1] : 0;
         document.getElementById('roomHeader').innerHTML = `
-            <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
-                <h5 class="m-0">🃏 ${escapeHtml(state.roomName)} <span class="text-muted small">#${state.roomId}</span></h5>
-                <div class="d-flex gap-2 align-items-center flex-wrap">
-                    <span class="badge text-bg-secondary">목표 ${state.targetScore}점</span>
-                    <span class="badge text-bg-info">A팀 ${teamA} : ${teamB} B팀</span>
-                    <span class="badge text-bg-light text-dark border">나: ${escapeHtml(NICKNAME)}</span>
-                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#helpModal">❓ 도움말</button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="leaveRoom()">나가기</button>
+            <div class="card mb-2">
+                <div class="card-body py-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <h5 class="m-0">🃏🂡 ${escapeHtml(state.roomName)} <span class="text-muted small">#${state.roomId}</span></h5>
+                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                        <span class="badge text-bg-secondary rounded-pill">목표 ${state.targetScore}점</span>
+                        <span class="badge text-bg-info rounded-pill">A팀 ${teamA} : ${teamB} B팀</span>
+                        <span class="badge text-bg-light text-dark border rounded-pill">👤 나: ${escapeHtml(NICKNAME)}</span>
+                        <button class="btn btn-sm btn-outline-secondary" title="게임 규칙 도움말" data-bs-toggle="modal" data-bs-target="#helpModal">⚙️</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="leaveRoom()">🚪 나가기</button>
+                    </div>
                 </div>
             </div>
         `;
@@ -760,81 +763,58 @@
             : '';
     }
 
+    function isDesktopWidth() {
+        return window.matchMedia('(min-width: 769px)').matches;
+    }
+
+    // 채팅 / 로그: PC에서는 항상 펼쳐진 카드, 모바일에서는 접이식 아코디언 (레퍼런스 디자인)
     function renderChatArea() {
         const el = document.getElementById('chatArea');
         if (!el) return;
-        const chatWasFocused = document.activeElement && document.activeElement.id === 'chatInputDesktop';
+
+        const existing = document.getElementById('chatAccordion');
+        if (existing) chatAccOpen = existing.open;
+
+        const desktop = isDesktopWidth();
+        const openNow = desktop ? true : (chatAccOpen ?? false);
+
+        const chatWasFocused = document.activeElement && document.activeElement.id === 'chatInputBox';
         const chatCursor = chatWasFocused ? document.activeElement.selectionStart : null;
 
-        el.innerHTML = `<div class="card mt-3 chat-inline-panel">
-            <div class="card-header py-2">채팅 / 로그</div>
-            <div class="card-body p-2">
-                <div id="chatBoxDesktop" class="small mb-2" style="height:130px; overflow-y:auto;">
-                    ${chatLog.map(m => `<div><strong>${escapeHtml(m.nick)}:</strong> ${escapeHtml(m.text)}</div>`).join('')}
+        const unreadBadge = (!openNow && chatUnread > 0)
+            ? ` <span class="badge text-bg-danger rounded-pill">${chatUnread > 99 ? '99+' : chatUnread}</span>`
+            : '';
+
+        el.innerHTML = `
+            <details id="chatAccordion" class="acc ${desktop ? 'always-open' : ''}" ${openNow ? 'open' : ''}>
+                <summary>💬 채팅 / 로그${unreadBadge} <span class="chev">⌄</span></summary>
+                <div class="acc-body">
+                    <div id="chatBox" class="small mb-2" style="height:150px; overflow-y:auto;">
+                        ${chatLog.length ? chatLog.map(m => `<div class="mb-1"><strong>${escapeHtml(m.nick)}:</strong> ${escapeHtml(m.text)}</div>`).join('') : '<div class="text-muted">아직 메시지가 없어요.</div>'}
+                    </div>
+                    <div class="input-group input-group-sm">
+                        <input id="chatInputBox" type="text" class="form-control chat-msg-input" placeholder="메시지 입력 후 Enter"
+                               value="${escapeHtml(chatDraft)}"
+                               oninput="chatDraft=this.value"
+                               onkeydown="if(event.key==='Enter'){sendChat();}" />
+                        <button class="btn btn-outline-primary" onclick="sendChat()">전송</button>
+                    </div>
                 </div>
-                <div class="input-group input-group-sm">
-                    <input id="chatInputDesktop" type="text" class="form-control chat-msg-input" placeholder="메시지 입력 후 Enter"
-                           value="${escapeHtml(chatDraft)}"
-                           oninput="chatDraft=this.value"
-                           onkeydown="if(event.key==='Enter'){sendChat();}" />
-                    <button class="btn btn-outline-primary" onclick="sendChat()">전송</button>
-                </div>
-            </div>
-        </div>`;
-
-        const cb = document.getElementById('chatBoxDesktop');
-        if (cb) cb.scrollTop = cb.scrollHeight;
-        if (chatWasFocused) {
-            const input = document.getElementById('chatInputDesktop');
-            if (input) {
-                input.focus();
-                if (chatCursor != null) input.setSelectionRange(chatCursor, chatCursor);
-            }
-        }
-    }
-
-    function renderChatOverlay() {
-        const overlay = document.getElementById('chatPanelOverlay');
-        if (!overlay) return;
-
-        const badge = document.getElementById('chatBadge');
-        if (badge) {
-            if (chatUnread > 0) {
-                badge.style.display = 'flex';
-                badge.textContent = chatUnread > 99 ? '99+' : chatUnread;
-            } else {
-                badge.style.display = 'none';
-            }
-        }
-
-        overlay.style.display = chatPanelOpen ? 'flex' : 'none';
-        if (!chatPanelOpen) return;
-
-        const chatWasFocused = document.activeElement && document.activeElement.id === 'chatInputMobile';
-        const chatCursor = chatWasFocused ? document.activeElement.selectionStart : null;
-
-        overlay.innerHTML = `
-            <div class="d-flex justify-content-between align-items-center px-2 py-2 border-bottom bg-light">
-                <strong class="small">💬 채팅 / 로그</strong>
-                <button type="button" class="btn-close" onclick="toggleChatPanel()" aria-label="닫기"></button>
-            </div>
-            <div id="chatBoxMobile" class="small p-2 flex-grow-1" style="overflow-y:auto;">
-                ${chatLog.length ? chatLog.map(m => `<div class="mb-1"><strong>${escapeHtml(m.nick)}:</strong> ${escapeHtml(m.text)}</div>`).join('') : '<div class="text-muted">아직 메시지가 없어요.</div>'}
-            </div>
-            <div class="input-group input-group-sm p-2 border-top">
-                <input id="chatInputMobile" type="text" class="form-control chat-msg-input" placeholder="메시지 입력 후 Enter"
-                       value="${escapeHtml(chatDraft)}"
-                       oninput="chatDraft=this.value"
-                       onkeydown="if(event.key==='Enter'){sendChat();}" />
-                <button class="btn btn-outline-primary" onclick="sendChat()">전송</button>
-            </div>
+            </details>
         `;
 
-        positionChatOverlay();
-        const cb = document.getElementById('chatBoxMobile');
+        const acc = document.getElementById('chatAccordion');
+        if (acc) {
+            acc.addEventListener('toggle', () => {
+                chatAccOpen = acc.open;
+                if (acc.open && chatUnread > 0) { chatUnread = 0; renderChatArea(); }
+            });
+        }
+
+        const cb = document.getElementById('chatBox');
         if (cb) cb.scrollTop = cb.scrollHeight;
         if (chatWasFocused) {
-            const input = document.getElementById('chatInputMobile');
+            const input = document.getElementById('chatInputBox');
             if (input) {
                 input.focus();
                 if (chatCursor != null) input.setSelectionRange(chatCursor, chatCursor);
@@ -879,14 +859,15 @@
             const p = state.players.find(pl => pl.seat === s);
             const team = s % 2 === 0 ? 'A팀' : 'B팀';
             if (!p) {
-                return `<div class="col-6 col-md-3"><div class="border rounded p-3 text-center text-muted">빈 자리 (좌석 ${s + 1})</div></div>`;
+                return `<div class="col-6 col-md-3"><div class="border rounded-4 p-3 text-center text-muted">빈 자리 (좌석 ${s + 1})</div></div>`;
             }
             return `<div class="col-6 col-md-3">
-                <div class="border rounded p-3 text-center position-relative ${p.userId === USER_ID ? 'border-primary border-2' : ''}">
+                <div class="border rounded-4 p-3 text-center position-relative ${p.userId === USER_ID ? 'border-primary border-2' : ''}">
                     <div class="ready-icon" title="${p.isReady ? '준비완료' : '대기중'}">${p.isReady ? '✅' : '⏳'}</div>
-                    <div class="fw-bold">${p.isBot ? '🤖 ' : ''}${escapeHtml(p.nickname)} ${p.isHost ? '👑' : ''}</div>
+                    ${avatarHtml(p)}
+                    <div class="fw-bold">${escapeHtml(p.nickname)} ${p.isHost ? '👑' : ''}</div>
                     <div class="small text-muted">${team} · 좌석 ${s + 1}</div>
-                    <span class="badge ${p.isReady ? 'text-bg-success' : 'text-bg-secondary'} mt-1">${p.isReady ? '준비완료' : '대기중'}</span>
+                    <span class="badge rounded-pill ${p.isReady ? 'text-bg-success' : 'text-bg-secondary'} mt-1">${p.isReady ? '준비완료' : '대기중'}</span>
                 </div>
             </div>`;
         }).join('');
@@ -899,13 +880,50 @@
                 <h5>대기실 (${state.players.length}/4)</h5>
                 <div class="row g-2 my-3">${seats}</div>
                 <div class="d-flex gap-2 flex-wrap">
-                    <button class="btn btn-outline-primary" onclick="toggleReady()">${me && me.isReady ? '준비 해제' : '준비하기'}</button>
+                    <button class="btn btn-outline-primary" onclick="toggleReady()">${me && me.isReady ? '✅ 준비 해제' : '✅ 준비하기'}</button>
                     ${IS_HOST && state.players.length < 4 ? `<button class="btn btn-outline-secondary" onclick="addBot()">🤖 AI 봇 추가</button>` : ''}
-                    ${IS_HOST ? `<button class="btn btn-success" ${allReady ? '' : 'disabled'} onclick="startGame()">게임 시작</button>` : ''}
+                    ${IS_HOST ? `<button class="btn btn-success" ${allReady ? '' : 'disabled'} onclick="startGame()">▶️ 게임 시작</button>` : ''}
                 </div>
-                ${!allReady ? '<div class="text-muted small mt-2">4명이 모두 입장하고 준비를 완료해야 시작할 수 있습니다. (0,2번 좌석 = A팀, 1,3번 좌석 = B팀). 사람이 부족하면 AI 봇으로 채워도 됩니다. 마작을 가진 사람이 매 라운드 첫 트릭을 시작합니다. 하는 법이 궁금하면 위쪽 "도움말"을 눌러보세요.</div>' : ''}
             </div>
         </div>`;
+    }
+
+    function guideTipsForState() {
+        if (state.status === 'Waiting') {
+            return ['4명이 모두 입장하고 준비를 완료해야 시작할 수 있어요. (0,2번 좌석 = A팀, 1,3번 좌석 = B팀)',
+                '사람이 부족하면 방장이 AI 봇으로 빈 자리를 채울 수 있어요.',
+                '마작을 가진 사람이 매 라운드 첫 트릭을 시작해요. 자세한 규칙은 ⚙️ 버튼을 눌러보세요.'];
+        }
+        if (state.status !== 'Playing') return ['게임이 종료되었습니다. 결과를 확인해보세요.'];
+        if (state.phase === 'Exchange') {
+            return ['카드를 선택한 후 보낼 자리를 눌러 배정하세요.', '총 14장의 카드 중 3장(왼쪽·파트너·오른쪽에 1장씩)을 교환합니다.', '라지 티츄는 교환을 제출하기 전에만 부를 수 있어요.'];
+        }
+        if (state.phase === 'RoundEnd') return ['이번 라운드 결과를 확인하고 다음 라운드를 시작하세요.'];
+        return ['내 차례에는 이전 패보다 센 같은 종류의 조합을 내거나 패스하세요.', '테이블이 비어있을 땐 아무 조합이나 자유롭게 낼 수 있어요.'];
+    }
+
+    // 게임 안내(짧은 컨텍스트 팁): PC에서는 항상 펼쳐진 카드, 모바일에서는 접이식 아코디언
+    function renderGuideArea() {
+        const el = document.getElementById('guideArea');
+        if (!el || !state) return;
+
+        const existing = document.getElementById('guideAccordion');
+        const prevOpen = existing ? existing.open : guideAccOpen;
+        guideAccOpen = prevOpen;
+
+        const desktop = isDesktopWidth();
+        const openNow = desktop ? true : (guideAccOpen ?? false);
+        const tips = guideTipsForState().map(t => `<li>${t}</li>`).join('');
+
+        el.innerHTML = `
+            <details id="guideAccordion" class="acc ${desktop ? 'always-open' : ''}" ${openNow ? 'open' : ''}>
+                <summary>💡 게임 안내 <span class="chev">⌄</span></summary>
+                <div class="acc-body small text-muted"><ul class="mb-0 ps-3">${tips}</ul></div>
+            </details>
+        `;
+
+        const acc = document.getElementById('guideAccordion');
+        if (acc) acc.addEventListener('toggle', () => { guideAccOpen = acc.open; });
     }
 
     function exchangeSeatSlot(seat, posClass, label, submitted) {
@@ -925,8 +943,9 @@
 
         return `<div class="seat-pos ${posClass}">
             <div class="player-slot">
-                <div class="fw-bold">${p.isBot ? '🤖 ' : ''}${escapeHtml(p.nickname)}${p.isHost ? ' 👑' : ''}</div>
-                <div class="small text-muted">${label}</div>
+                ${avatarHtml(p)}
+                <div class="fw-bold">${escapeHtml(p.nickname)}${p.isHost ? ' 👑' : ''}</div>
+                <div class="slot-role">${label}</div>
                 ${slotHtml}
             </div>
         </div>`;
@@ -964,7 +983,7 @@
                     ${exchangeSeatSlot(topSeat, 'seat-top', '파트너', submitted)}
                     ${exchangeSeatSlot(leftSeat, 'seat-left', '왼쪽', submitted)}
                     ${exchangeSeatSlot(rightSeat, 'seat-right', '오른쪽', submitted)}
-                    <div class="seat-pos seat-bottom"><div class="player-slot me"><div class="fw-bold">${escapeHtml(NICKNAME)} (나)</div></div></div>
+                    <div class="seat-pos seat-bottom"><div class="player-slot me">${avatarHtml({ isBot: false, userId: USER_ID })}<div class="fw-bold">${escapeHtml(NICKNAME)} (나)</div></div></div>
                     <div class="center-play"><div class="center-label">${centerLabel}</div></div>
                 </div>
             </div>
@@ -976,7 +995,7 @@
                     <h6 class="m-0">내 손패 (${submitted ? state.myHand.length : handCards.length + '장 남음 / 전체 ' + state.myHand.length}장)</h6>
                     <div class="d-flex gap-2 flex-wrap">
                         ${tichuBtns}
-                        <button class="btn btn-success btn-sm" ${readyToSubmit && !submitted ? '' : 'disabled'} onclick="submitExchange()">교환 제출</button>
+                        <button class="btn btn-success btn-sm" ${readyToSubmit && !submitted ? '' : 'disabled'} onclick="submitExchange()">📤 교환 제출</button>
                     </div>
                 </div>
                 <div class="hand-row">${cardsHtml}</div>
@@ -989,7 +1008,13 @@
         return { tableHtml, handHtml, handKey };
     }
 
-    function seatSlot(seat, posClass) {
+    function avatarHtml(p) {
+        const cls = p.isBot ? 'is-bot' : (p.userId === USER_ID ? 'is-me' : '');
+        const icon = p.isBot ? '🤖' : '👤';
+        return `<div class="player-avatar ${cls}">${icon}</div>`;
+    }
+
+    function seatSlot(seat, posClass, roleLabel) {
         const p = state.players.find(pl => pl.seat === seat);
         if (!p) return `<div class="seat-pos ${posClass}"><div class="player-slot text-muted">빈 자리</div></div>`;
 
@@ -1000,14 +1025,16 @@
         if (p.userId === USER_ID) cls.push('me');
 
         const tichuBadge = p.tichuCall === 'Grand' ? ' ⚡' : (p.tichuCall === 'Small' ? ' ❗' : '');
-        const cardbackRow = `<div class="mini-cardback-row">${Array.from({ length: p.handCount }).map(() => '<div class="mini-cardback"></div>').join('')}</div>`;
+        const cardbackBar = `<div class="cardback-bar" style="width:${Math.min(p.handCount * 7, 100)}px"></div>`;
 
         return `<div class="seat-pos ${posClass}">
             <div class="${cls.join(' ')}">
-                <div class="fw-bold">${p.isBot ? '🤖 ' : ''}${escapeHtml(p.nickname)}${p.isHost ? ' 👑' : ''}${tichuBadge}</div>
+                ${avatarHtml(p)}
+                <div class="fw-bold">${escapeHtml(p.nickname)}${p.isHost ? ' 👑' : ''}${tichuBadge}</div>
+                ${roleLabel ? `<div class="slot-role">${roleLabel}</div>` : ''}
                 ${p.hasFinished
                     ? `<div class="slot-sub">완료 · ${p.finishPosition + 1}등</div>`
-                    : `${cardbackRow}<div class="slot-sub">${p.handCount}장</div>`}
+                    : `${cardbackBar}<div class="slot-sub">${p.handCount}장</div>`}
                 ${isTurn ? '<div class="small text-success fw-bold">👉 차례</div>' : ''}
             </div>
         </div>`;
@@ -1082,9 +1109,9 @@
                 ${turnBanner}
                 ${dragonPanel}
                 <div class="round-table">
-                    ${seatSlot(topSeat, 'seat-top')}
-                    ${seatSlot(leftSeat, 'seat-left')}
-                    ${seatSlot(rightSeat, 'seat-right')}
+                    ${seatSlot(topSeat, 'seat-top', '파트너')}
+                    ${seatSlot(leftSeat, 'seat-left', '왼쪽')}
+                    ${seatSlot(rightSeat, 'seat-right', '오른쪽')}
                     ${seatSlot(mySeat, 'seat-bottom')}
                     <div class="center-play">
                         <div class="center-label">${centerLabel}</div>
@@ -1128,9 +1155,9 @@
                     <h6 class="m-0">내 손패 (${state.myHand.length}장)</h6>
                     <div class="d-flex gap-2 flex-wrap">
                         ${tichuBtns}
-                        <button class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">선택 해제</button>
-                        <button class="btn btn-sm btn-success" ${myTurn && canPlay ? '' : 'disabled'} onclick="playSelected()">내기</button>
-                        <button class="btn btn-sm btn-outline-dark" ${myTurn && state.lastPlay.length > 0 ? '' : 'disabled'} onclick="passTurn()">패스</button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">🔄 선택 초기화</button>
+                        <button class="btn btn-sm btn-success" ${myTurn && canPlay ? '' : 'disabled'} onclick="playSelected()">🃏 내기</button>
+                        <button class="btn btn-sm btn-outline-dark" ${myTurn && state.lastPlay.length > 0 ? '' : 'disabled'} onclick="passTurn()">⏭️ 패스</button>
                     </div>
                 </div>
                 ${pendingMahjongPlay ? mahjongWishPickerHtml() : ''}
