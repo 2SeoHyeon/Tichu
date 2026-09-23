@@ -87,6 +87,37 @@ namespace Tichu.Hub
             await _broadcaster.BroadcastLobbyAsync();
         }
 
+        public async Task KickPlayer(int roomId, string userId, string targetUserId)
+        {
+            var (room, error, kickedConnectionId) = _roomService.KickPlayer(roomId, userId, targetUserId);
+            if (error != null)
+            {
+                await Clients.Caller.SendAsync("ErrorMessage", error);
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(kickedConnectionId))
+            {
+                await Clients.Client(kickedConnectionId).SendAsync("Kicked");
+                await Groups.RemoveFromGroupAsync(kickedConnectionId, $"room_{roomId}");
+            }
+
+            if (room != null)
+            {
+                if (!_roomService.HasConnectedHuman(room))
+                {
+                    _timers.Stop(room.Id);
+                    _roomService.DeleteRoom(room.Id);
+                }
+                else
+                {
+                    await _broadcaster.BroadcastRoomAsync(room);
+                    _timers.Schedule(room);
+                }
+            }
+            await _broadcaster.BroadcastLobbyAsync();
+        }
+
         public async Task ToggleReady(int roomId, string userId)
         {
             if (_roomService.ToggleReady(roomId, userId))

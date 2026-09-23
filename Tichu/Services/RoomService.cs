@@ -162,6 +162,52 @@ namespace Tichu.Services
             }
         }
 
+        /// <summary>방장이 다른 플레이어를 강퇴. 대기 중이면 자리에서 완전히 제거하고,
+        /// 게임 중이면 연결이 끊긴 것과 동일하게 처리해서(자리는 유지) 기존 타임아웃/봇 로직이
+        /// 그대로 이어받아 게임이 끊기지 않게 한다.</summary>
+        public (GameRoom? room, string? error, string? kickedConnectionId) KickPlayer(int roomId, string requestingUserId, string targetUserId)
+        {
+            if (!_rooms.TryGetValue(roomId, out var room)) return (null, "존재하지 않는 방입니다.", null);
+
+            lock (room.Lock)
+            {
+                if (room.HostUserId != requestingUserId) return (null, "방장만 강퇴할 수 있습니다.", null);
+                if (requestingUserId == targetUserId) return (null, "자기 자신은 강퇴할 수 없습니다.", null);
+
+                var target = room.Players.FirstOrDefault(p => p.UserId == targetUserId);
+                if (target == null) return (null, "대상을 찾을 수 없습니다.", null);
+                // 대기 중인 봇은 자리를 비우기 위해 제거할 수 있지만, 게임 중인 봇은
+                // 제거하면 진행 중인 라운드(손패/턴 순서)가 깨지므로 막는다.
+                if (target.IsBot && room.Status != RoomStatus.Waiting) return (null, "게임 중인 AI 봇은 강퇴할 수 없습니다.", null);
+
+                var kickedConnectionId = target.ConnectionId;
+
+                if (room.Status == RoomStatus.Waiting)
+                {
+                    room.Players.Remove(target);
+
+                    if (room.Players.Count == 0)
+                    {
+                        _rooms.TryRemove(roomId, out _);
+                        return (null, null, kickedConnectionId);
+                    }
+
+                    if (target.IsHost)
+                    {
+                        var newHost = room.Players.OrderBy(p => p.Seat).First();
+                        newHost.IsHost = true;
+                        room.HostUserId = newHost.UserId;
+                    }
+                }
+                else
+                {
+                    target.IsConnected = false;
+                }
+
+                return (room, null, kickedConnectionId);
+            }
+        }
+
         public GameRoom? SetConnectionState(string userId, string connectionId, bool connected)
         {
             var room = _rooms.Values.FirstOrDefault(r => r.Players.Any(p => p.ConnectionId == connectionId && p.UserId == userId));
