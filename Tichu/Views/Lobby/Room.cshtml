@@ -92,10 +92,15 @@
         --cream-2: #f3e7cf;
         --ink: #4a3f2f;
         --wood: #8a5a34;
+        --felt-1: #2f7d55;
+        --felt-2: #163d2a;
     }
+    /* 페이지 전체가 실제 카드 테이블처럼 초록 펠트 배경으로 가득 차도록.
+       (흰 카드 여러 장이 크림색 배경에 떠있는 느낌이 아니라, 배경 자체가 게임판) */
     body {
-        background: linear-gradient(180deg, var(--cream-1) 0%, var(--cream-2) 100%);
+        background: radial-gradient(ellipse at 50% 0%, var(--felt-1) 0%, var(--felt-2) 65%, #0f2a1c 100%);
         background-attachment: fixed;
+        color: #f3faf0;
     }
 
     /* 이 페이지 전체 버튼을 알약(pill) 모양으로 */
@@ -103,23 +108,17 @@
     .card { border-radius: 16px; border-color: rgba(0,0,0,0.08); }
     .modal-content { border-radius: 16px; }
 
-    /* 페이지 전체를 "하나의 게임 판"처럼 보이게 하는 나무 액자 프레임.
-       헤더/안내/테이블/손패/채팅이 각각 따로 떠있는 흰 카드가 아니라
-       이 프레임 하나에 담긴 연속된 판으로 보이도록 함 */
-    .game-board {
-        background: linear-gradient(180deg, #fffdf7 0%, #fbf2dd 100%);
-        border: 7px solid var(--wood);
-        border-radius: 26px;
-        box-shadow: 0 10px 34px rgba(74,58,34,0.22), inset 0 0 0 3px rgba(255,255,255,0.55);
-        padding: 14px 18px 18px;
-    }
+    /* 헤더/안내/테이블/손패/채팅을 감싸던 나무 액자를 없애고, 몸 전체의 펠트
+       배경이 그대로 비쳐서 페이지 전체가 하나의 테이블처럼 보이도록 함 */
+    .game-board { background: transparent; border: none; box-shadow: none; padding: 6px 10px 14px; }
     @@media (max-width: 576px) {
-        .game-board { border-width: 5px; border-radius: 18px; padding: 10px 10px 14px; }
+        .game-board { padding: 4px 6px 10px; }
     }
-    /* 판 안의 각 구획: 자체 흰 배경/테두리/그림자 없이, 얇은 구분선만으로 나눔.
-       각 구획은 #roomHeader 등 별도 컨테이너 안에 있어 CSS 인접 형제 선택자가 통하지
-       않으므로, 기본적으로 위쪽 구분선을 주고 맨 위(헤더)만 인라인으로 없앰 */
-    .board-section { background: transparent; border: none; box-shadow: none; border-radius: 0; padding: 10px 2px; border-top: 1px dashed rgba(138,90,52,0.25); }
+    /* 판 안의 각 구획: 자체 박스/테두리/구분선 없이 그냥 펠트 위에 바로 떠있음 */
+    .board-section { background: transparent; border: none; box-shadow: none; border-radius: 0; padding: 10px 2px; color: #f3faf0; }
+    .board-section h4, .board-section h5, .board-section h6 { color: #f3faf0; }
+    .board-section .text-muted { color: rgba(243,250,240,0.72) !important; }
+    .board-section .border { border-color: rgba(255,255,255,0.35) !important; }
 
     /* 접이식(아코디언) 패널: 게임 안내 / 채팅·로그. 데스크톱에서는 항상 펼쳐진 상태로 보여줌.
        판(.game-board) 안에 얹히는 구획이라 불투명한 흰 박스 대신 옅은 반투명 배경만 사용 */
@@ -188,19 +187,14 @@
     .round-table {
         position: relative; width: 100%; max-width: min(70vw, 1180px); height: 460px;
         margin: 34px auto 46px;
-        background: radial-gradient(ellipse at center, #2f7d55 0%, #1c4a34 100%);
-        border-radius: 50%;
-        border: 10px solid #6b4423;
-        box-shadow: inset 0 0 50px rgba(0,0,0,0.45), 0 4px 14px rgba(0,0,0,0.3);
-    }
-    .round-table::before {
-        content: '◆ TICHU ◆';
-        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        color: rgba(255,255,255,0.18); font-size: 1.4rem; font-weight: 800; letter-spacing: 3px;
-        white-space: nowrap; z-index: 0; pointer-events: none;
+        /* 페이지 배경 자체가 이미 초록 펠트라서, 원탁은 자체 배경/테두리 없이
+           좌석을 배치하는 자리(포지셔닝 컨테이너) 역할만 함 */
+        background: transparent;
+        border: none;
+        box-shadow: none;
     }
     .round-table .center-play { z-index: 1; }
-    @@media (max-width: 576px) { .round-table { height: 360px; margin: 28px auto 40px; } .round-table::before { font-size: 1.1rem; } }
+    @@media (max-width: 576px) { .round-table { height: 360px; margin: 28px auto 40px; } }
 
     .seat-pos { position: absolute; width: 170px; text-align: center; }
     .seat-pos.seat-bottom { bottom: -26px; left: 50%; transform: translateX(-50%); }
@@ -209,12 +203,13 @@
     .seat-pos.seat-right { right: -14px; top: 50%; transform: translateY(-50%); }
     @@media (max-width: 576px) { .seat-pos { width: 132px; } }
 
-    .player-slot { position: relative; border-radius: 14px; padding: 10px 12px; text-align: center; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.15); font-size: 0.92rem; color: #212529; }
+    /* 플레이어 자리: 펠트 위에 바로 뜨는 반투명 검정 알약 (레퍼런스 스타일) */
+    .player-slot { position: relative; border-radius: 14px; padding: 10px 12px; text-align: center; background: rgba(0,0,0,0.28); backdrop-filter: blur(2px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-size: 0.92rem; color: #f5fbf2; }
     .player-slot.active-turn { outline: 4px solid #ffc107; box-shadow: 0 0 0 5px rgba(255,193,7,0.4); }
     .player-slot.disconnected { opacity: 0.5; }
-    .player-slot.me { outline: 3px solid #0d6efd; }
-    .player-slot .slot-sub { font-size: 0.82rem; color: #495057; margin-top: 2px; }
-    .player-slot .slot-role { font-size: 0.72rem; color: #868e96; margin-top: -2px; }
+    .player-slot.me { outline: 3px solid #4dabf7; }
+    .player-slot .slot-sub { font-size: 0.82rem; color: rgba(245,251,242,0.85); margin-top: 2px; }
+    .player-slot .slot-role { font-size: 0.72rem; color: rgba(245,251,242,0.6); margin-top: -2px; }
 
     .center-play {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -759,7 +754,7 @@
         const teamA = state.teamScores ? state.teamScores[0] : 0;
         const teamB = state.teamScores ? state.teamScores[1] : 0;
         document.getElementById('roomHeader').innerHTML = `
-            <div class="board-section" style="border-top:none;">
+            <div class="board-section">
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                     <h5 class="m-0">🃏 ${escapeHtml(state.roomName)} <span class="text-muted small">#${state.roomId}</span></h5>
                     <div class="d-flex gap-2 align-items-center flex-wrap">
