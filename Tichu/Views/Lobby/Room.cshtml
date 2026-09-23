@@ -170,11 +170,7 @@
     }
     .player-avatar.is-bot { background: linear-gradient(135deg, #d0bfff, #9775fa); }
     .player-avatar.is-me { background: linear-gradient(135deg, #ffd8a8, #ff922b); }
-    /* 원탁 안 좌석의 아바타는 원탁이 작아지면(container query) 같이 작아짐 */
-    .round-table .player-avatar {
-        width: clamp(28px, 13cqw, 54px); height: clamp(28px, 13cqw, 54px);
-        font-size: clamp(0.9rem, 6cqw, 1.6rem);
-    }
+    .round-table .player-avatar { width: 40px; height: 40px; font-size: 1.2rem; }
 
     /* 카드 뒷면 바코드 스타일 (남은 카드 수를 한눈에) */
     .cardback-bar {
@@ -223,10 +219,12 @@
         .tichu-card:not(.small-card).special .card-name { font-size: 0.76rem; }
     }
 
-    /* 원탁 영역: 남은 세로 공간을 전부 차지하고, 그 안에서 원탁을 가운데
-       정렬한다. container query 크기 단위(cqw/cqh)를 쓰면 이 영역의 실제
-       가로/세로 중 더 작은 쪽에 맞춰, 자바스크립트 없이도 "이 공간에 들어가는
-       가장 큰 정사각형(=완전한 원)"을 항상 구할 수 있다 */
+    /* 원탁 영역: 남은 세로 공간을 전부 차지하고, 그 안에서 원탁을 가운데 정렬.
+       container query 크기 단위(cqw/cqh)로 "이 영역에 들어가는 가장 큰
+       정사각형"을 계산한다. (min-height 등으로 강제로 늘리면 크로미움에서
+       크기가 0으로 깨지는 경우가 있어, 이 영역 자체의 크기는 순수하게 flex가
+       실제로 배분한 공간 그대로 쓰고, 대신 다른 구획들을 최대한 압축해서
+       이 영역에 넉넉한 공간이 돌아가게 한다) */
     .round-table-wrap {
         flex: 1 1 auto; min-height: 0; width: 100%;
         display: flex; align-items: center; justify-content: center;
@@ -245,16 +243,16 @@
     }
     .round-table .center-play { z-index: 1; }
 
-    /* 좌석 위치/크기도 원탁 자체 크기(container query 단위)에 비례하게 만들어서,
-       화면이 작아 원탁이 작아져도 좌석끼리 겹치지 않고 같이 줄어들게 함 */
-    .seat-pos { position: absolute; width: 34cqw; min-width: 64px; max-width: 190px; text-align: center; }
-    .seat-pos.seat-bottom { bottom: -7cqh; left: 50%; transform: translateX(-50%); }
-    .seat-pos.seat-top { top: -7cqh; left: 50%; transform: translateX(-50%); }
-    .seat-pos.seat-left { left: -4cqw; top: 50%; transform: translateY(-50%); }
-    .seat-pos.seat-right { right: -4cqw; top: 50%; transform: translateY(-50%); }
+    /* 좌석 위치/크기는 원탁(위치 기준 부모) 자신의 %로 지정해서, 원탁이
+       커지거나 작아지면 좌석도 항상 비례해서 따라가고 서로 겹치지 않음 */
+    .seat-pos { position: absolute; width: 34%; min-width: 64px; max-width: 190px; text-align: center; }
+    .seat-pos.seat-bottom { bottom: -7%; left: 50%; transform: translateX(-50%); }
+    .seat-pos.seat-top { top: -7%; left: 50%; transform: translateX(-50%); }
+    .seat-pos.seat-left { left: -4%; top: 50%; transform: translateY(-50%); }
+    .seat-pos.seat-right { right: -4%; top: 50%; transform: translateY(-50%); }
 
     /* 플레이어 자리: 펠트 위에 바로 뜨는 반투명 검정 알약 (레퍼런스 스타일) */
-    .player-slot { position: relative; border-radius: 14px; padding: 6px 8px; text-align: center; background: rgba(0,0,0,0.28); backdrop-filter: blur(2px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-size: clamp(0.68rem, 3.4cqw, 0.92rem); color: #f5fbf2; }
+    .player-slot { position: relative; border-radius: 14px; padding: 6px 8px; text-align: center; background: rgba(0,0,0,0.28); backdrop-filter: blur(2px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-size: 0.82rem; color: #f5fbf2; }
     .player-slot.active-turn { outline: 4px solid #ffc107; box-shadow: 0 0 0 5px rgba(255,193,7,0.4); }
     .player-slot.disconnected { opacity: 0.5; }
     .player-slot.me { outline: 3px solid #4dabf7; }
@@ -323,6 +321,24 @@
     .btn:not(.btn-sm) { min-height: 46px; font-size: 1rem; }
     @@media (max-width: 576px) {
         .btn-sm { min-height: 46px; font-size: 1rem; }
+    }
+
+    /* 세로로 짧은 화면(실기기 브라우저 주소창/하단바로 실사용 높이가 줄어든
+       경우 포함)에서는 게임판(원탁)이 넉넉한 공간을 가질 수 있도록, 헤더/
+       상태문구/손패 위쪽 줄 등 나머지 구획을 최대한 압축한다 */
+    @@media (max-height: 720px) {
+        #roomHeader h5 { font-size: 1rem; max-width: 60vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #roomHeader .btn-sm, #roomHeader .badge { min-height: 34px; padding: 0.3rem 0.6rem; font-size: 0.8rem; }
+        #roomHeader .small { font-size: 0.72rem; margin-top: 2px !important; }
+        .board-section { padding: 6px 2px; }
+        #statusBanner .alert { padding: 6px 10px; font-size: 0.82rem; margin-bottom: 4px; }
+        .acc > summary { padding: 6px 12px; font-size: 0.88rem; }
+        #handCard h6 { font-size: 0.85rem; }
+        #handCard .btn-sm { min-height: 34px; padding: 0.3rem 0.6rem; font-size: 0.78rem; }
+        .hand-row { padding: 6px 4px 4px; }
+        .tichu-card { width: 60px; height: 84px; }
+        .tichu-card .card-corner { font-size: 0.75rem; }
+        .tichu-card .card-suit-big { font-size: 1.7rem; }
     }
 </style>
 
