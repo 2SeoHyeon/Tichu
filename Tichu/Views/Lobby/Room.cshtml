@@ -172,12 +172,17 @@
     .player-avatar.is-me { background: linear-gradient(135deg, #ffd8a8, #ff922b); }
     .round-table .player-avatar { width: 40px; height: 40px; font-size: 1.2rem; }
 
-    /* 카드 뒷면 바코드 스타일 (남은 카드 수를 한눈에) */
-    .cardback-bar {
-        height: 20px; max-width: 100px; margin: 4px auto 0; border-radius: 5px;
-        background-image: repeating-linear-gradient(90deg, #1e3a8a 0px, #1e3a8a 3px, #3b5bdb 3px, #3b5bdb 6px);
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5), 0 1px 3px rgba(0,0,0,0.3);
+    /* 다른 플레이어의 카드 뒷면을 부채꼴로 펼쳐서 보여줌 (티추비 스타일) */
+    .cardback-fan { position: relative; width: 58px; height: 32px; margin: 4px auto 2px; }
+    .cardback-fan .cb {
+        position: absolute; bottom: 0; left: 50%; width: 20px; height: 28px; border-radius: 4px;
+        background-image: repeating-linear-gradient(45deg, #1e3a8a 0px, #1e3a8a 3px, #3b5bdb 3px, #3b5bdb 6px);
+        border: 1.5px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+        transform-origin: bottom center;
     }
+    .cardback-fan .cb:nth-child(1) { transform: translate(-19px, 0) rotate(-16deg); }
+    .cardback-fan .cb:nth-child(2) { transform: translateX(-50%) rotate(0deg); z-index: 1; }
+    .cardback-fan .cb:nth-child(3) { transform: translate(-1px, 0) rotate(16deg); }
 
     .tichu-card {
         width: 74px; height: 102px;
@@ -194,8 +199,11 @@
 
     .tichu-card .card-corner { position: absolute; top: 5px; left: 7px; font-size: 0.9rem; font-weight: 800; line-height: 1.1; }
     .tichu-card .card-suit-big { font-size: 2.2rem; }
-    .tichu-card.text-danger .card-corner, .tichu-card.text-danger .card-suit-big { color: #dc3545; }
-    .tichu-card.text-dark .card-corner, .tichu-card.text-dark .card-suit-big { color: #212529; }
+    /* 티추비 스타일 무늬 색상: 하트=파랑, 번개=노랑(진한 골드), 클로버=초록, 별=빨강 */
+    .tichu-card.suit-blue .card-corner, .tichu-card.suit-blue .card-suit-big { color: #1c7ed6; }
+    .tichu-card.suit-yellow .card-corner, .tichu-card.suit-yellow .card-suit-big { color: #e8a400; }
+    .tichu-card.suit-green .card-corner, .tichu-card.suit-green .card-suit-big { color: #2f9e44; }
+    .tichu-card.suit-red .card-corner, .tichu-card.suit-red .card-suit-big { color: #e03131; }
 
     .tichu-card.special { color: #fff; text-align: center; gap: 3px; border: none; }
     .tichu-card.special .card-icon { font-size: 1.9rem; line-height: 1; }
@@ -256,7 +264,10 @@
     .player-slot.active-turn { outline: 4px solid #ffc107; box-shadow: 0 0 0 5px rgba(255,193,7,0.4); }
     .player-slot.disconnected { opacity: 0.5; }
     .player-slot.me { outline: 3px solid #4dabf7; }
-    .player-slot .slot-sub { font-size: 0.88em; color: rgba(245,251,242,0.85); margin-top: 2px; }
+    .player-slot .slot-sub {
+        display: inline-block; margin-top: 4px; font-size: 0.78em; font-weight: 700; color: #1c4a34;
+        background: rgba(255,255,255,0.92); border-radius: 999px; padding: 1px 10px;
+    }
     .player-slot .slot-role { font-size: 0.8em; color: rgba(245,251,242,0.6); margin-top: -2px; }
 
     .center-play {
@@ -268,7 +279,14 @@
        좌우 좌석 카드와 겹친다. 그래서 라벨은 항상 원탁 "위"의 별도 줄
        (.center-label-mobile)로만 보여주고, 원탁 안쪽 라벨은 쓰지 않는다 */
     .center-label { display: none; }
-    .center-label-mobile { display: block; text-align: center; margin-bottom: 6px; }
+    .center-label-mobile {
+        display: block; text-align: center; margin-bottom: 6px;
+    }
+    .center-label-mobile .pill-badge {
+        display: inline-block; background: rgba(255,255,255,0.92); color: #1c4a34;
+        border-radius: 999px; padding: 3px 14px; font-weight: 700; font-size: 0.8rem;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    }
 
     .turn-banner {
         text-align: center; font-weight: 800; font-size: 1.15rem; padding: 12px; border-radius: 10px;
@@ -372,10 +390,12 @@
         div.textContent = s ?? '';
         return div.innerHTML;
     }
-    function suitSymbol(suit) { return { S: '♠', H: '♥', C: '♣', D: '♦' }[suit] || ''; }
-    function suitColorClass(suit) { return (suit === 'H' || suit === 'D') ? 'text-danger' : 'text-dark'; }
+    // 티추비(tichu.be) 스타일: ♠♥♦♣ 대신 색깔이 있는 아이콘 4종(하트=파랑,
+    // 번개=노랑, 클로버=초록, 별=빨강)으로 무늬를 표시
+    function suitSymbol(suit) { return { S: '★', H: '♥', C: '☘', D: '⚡' }[suit] || ''; }
+    function suitColorClass(suit) { return { S: 'suit-red', H: 'suit-blue', C: 'suit-green', D: 'suit-yellow' }[suit] || 'suit-blue'; }
 
-    const SPECIAL_ICON = { Dragon: '🐉', Phoenix: '🔥', Dog: '🐶', Mahjong: '🀄' };
+    const SPECIAL_ICON = { Dragon: '🐉', Phoenix: '🔥', Dog: '🐶', Mahjong: '🐦' };
     const SPECIAL_NAME = { Dragon: '드래곤', Phoenix: '불사조', Dog: '도그', Mahjong: '마작' };
     const RANK_LABELS = { 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10', 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };
     function rankLabel(value) { return RANK_LABELS[value] ?? String(value); }
@@ -1046,7 +1066,7 @@
 
         const tableHtml = `<div class="board-section board-section-table">
             <p class="text-muted small mb-1 mt-1">라지 티츄는 교환을 제출하기 전에만 부를 수 있어요.</p>
-            <div class="center-label-mobile small fw-bold text-muted">${centerLabel}</div>
+            <div class="center-label-mobile"><span class="pill-badge">${centerLabel}</span></div>
             <div class="round-table-wrap"><div class="round-table">
                 ${exchangeSeatSlot(topSeat, 'seat-top', '파트너', submitted)}
                 ${exchangeSeatSlot(leftSeat, 'seat-left', '왼쪽', submitted)}
@@ -1090,7 +1110,7 @@
         if (p.userId === USER_ID) cls.push('me');
 
         const tichuBadge = p.tichuCall === 'Grand' ? ' ⚡' : (p.tichuCall === 'Small' ? ' ❗' : '');
-        const cardbackBar = `<div class="cardback-bar" style="width:${Math.min(p.handCount * 7, 100)}px"></div>`;
+        const cardbackBar = `<div class="cardback-fan"><div class="cb"></div><div class="cb"></div><div class="cb"></div></div>`;
         const canKick = IS_HOST && !p.isBot && p.userId !== USER_ID;
 
         return `<div class="seat-pos ${posClass}">
@@ -1175,7 +1195,7 @@
             ${wishBanner}
             ${turnBanner}
             ${dragonPanel}
-            <div class="center-label-mobile small fw-bold text-muted">${centerLabel}</div>
+            <div class="center-label-mobile"><span class="pill-badge">${centerLabel}</span></div>
             <div class="round-table-wrap"><div class="round-table">
                 ${seatSlot(topSeat, 'seat-top', '파트너')}
                 ${seatSlot(leftSeat, 'seat-left', '왼쪽')}
