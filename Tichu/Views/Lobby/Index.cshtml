@@ -8,7 +8,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="m-0">🃏 Tichu 로비</h3>
         <div class="d-flex align-items-center gap-2">
-            <a href="/Home/MyPage" class="badge text-bg-info text-decoration-none" title="마이페이지">나: @Model.Nickname</a>
+            <a href="/Home/MyPage" class="badge bg-info text-dark text-decoration-none" title="마이페이지">나: @Model.Nickname</a>
             <a href="/Lobby/Create" class="btn btn-primary">방 만들기</a>
         </div>
     </div>
@@ -40,7 +40,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
 <script>
     const statusLabel = { Waiting: '대기중', Playing: '게임중', Ended: '종료' };
-    const statusBadge = { Waiting: 'text-bg-success', Playing: 'text-bg-warning', Ended: 'text-bg-secondary' };
+    const statusBadge = { Waiting: 'bg-success text-white', Playing: 'bg-warning text-dark', Ended: 'bg-secondary text-white' };
 
     function renderRooms(rooms) {
         const tbody = document.getElementById('roomList');
@@ -61,7 +61,7 @@
                 <td>${r.targetScore}점</td>
                 <td>${r.turnTimeLimit}초</td>
                 <td>${r.playerCount} / 4</td>
-                <td><span class="badge ${statusBadge[r.status] || 'text-bg-secondary'}">${statusLabel[r.status] || r.status}</span></td>
+                <td><span class="badge ${statusBadge[r.status] || 'bg-secondary text-white'}">${statusLabel[r.status] || r.status}</span></td>
                 <td class="text-end">
                     ${canJoin
                         ? `<a href="/Lobby/Room/${r.id}" class="btn btn-sm btn-primary">입장</a>`
