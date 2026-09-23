@@ -146,6 +146,26 @@
     /* 게임판(원탁)을 담는 구획은 남은 세로 공간을 원탁에게 그대로 넘겨줘야 함 */
     .board-section-table { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 
+    /* 티추비 스타일 상단 바: 방 이름 카드 대신 라운드/점수 + 동그란 아이콘
+       버튼만 있는 얇은 한 줄. 방 이름은 그 아래 아주 작게만 보여줌 */
+    .top-bar-info { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.92rem; }
+    .team-score-pill {
+        display: inline-block; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 999px; padding: 1px 10px; font-size: 0.82rem; font-weight: 700;
+    }
+    .icon-btn {
+        width: 34px; height: 34px; border-radius: 50%; padding: 0; border: none;
+        display: inline-flex; align-items: center; justify-content: center;
+        background: rgba(255,255,255,0.92); color: #1c4a34; font-size: 1rem; line-height: 1;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+    .top-bar-roomname { font-size: 0.72rem; color: rgba(243,250,240,0.6); margin-top: 2px; }
+    /* 상태 문구: 박스 없이 초록 배경 위에 바로 뜨는 흰 글씨 (레퍼런스 스타일) */
+    .status-plain {
+        text-align: center; color: #fff; font-weight: 600; font-size: 0.86rem;
+        padding: 2px 8px; text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+    }
+
     /* 접이식(아코디언) 패널: 게임 안내 / 채팅·로그. 데스크톱에서는 항상 펼쳐진 상태로 보여줌.
        판(.game-board) 안에 얹히는 구획이라 불투명한 흰 박스 대신 옅은 반투명 배경만 사용 */
     .acc { border: 1px solid rgba(138,90,52,0.18); border-radius: 14px; background: rgba(255,255,255,0.55); overflow: hidden; }
@@ -825,29 +845,42 @@
         renderChatArea();
     }
 
+    function phaseLabelKorean() {
+        if (state.status === 'Waiting') return '대기중';
+        if (state.status !== 'Playing') return '종료';
+        if (state.phase === 'Exchange') return '라티 단계';
+        if (state.phase === 'RoundEnd') return '라운드 종료';
+        return '진행중';
+    }
+
+    // 티추비 레퍼런스처럼 방 이름 카드 대신, 라운드/팀 점수 + 아이콘 버튼만
+    // 있는 얇은 한 줄짜리 상단 바로 구성 (방 이름은 그 아래 아주 작게만 표시)
     function renderHeader() {
         const teamA = state.teamScores ? state.teamScores[0] : 0;
         const teamB = state.teamScores ? state.teamScores[1] : 0;
+        const roundLabel = state.status === 'Playing'
+            ? `${state.roundNumber || 1} 라운드 · ${phaseLabelKorean()}`
+            : phaseLabelKorean();
         document.getElementById('roomHeader').innerHTML = `
-            <div class="board-section">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                    <h5 class="m-0">🃏 ${escapeHtml(state.roomName)} <span class="text-muted small">#${state.roomId}</span></h5>
-                    <div class="d-flex gap-2 align-items-center flex-wrap">
-                        <span class="badge bg-secondary text-white rounded-pill d-none d-md-inline-flex">목표 ${state.targetScore}점</span>
-                        <span class="badge bg-info text-dark rounded-pill d-none d-md-inline-flex">A팀 ${teamA} : ${teamB} B팀</span>
-                        <span class="badge bg-light text-dark border rounded-pill">👤 나: ${escapeHtml(NICKNAME)}</span>
-                        <button class="btn btn-sm btn-outline-secondary" title="게임 규칙 도움말" data-bs-toggle="modal" data-bs-target="#helpModal">⚙️</button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="leaveRoom()">🚪 나가기</button>
+            <div class="board-section top-bar">
+                <div class="d-flex justify-content-between align-items-center gap-2">
+                    <div class="top-bar-info">
+                        <span class="fw-bold">${roundLabel}</span>
+                        <span class="team-score-pill">A팀 ${teamA} : ${teamB} B팀</span>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        <button class="icon-btn" title="게임 규칙 도움말" data-bs-toggle="modal" data-bs-target="#helpModal">⚙️</button>
+                        <button class="icon-btn" title="나가기" onclick="leaveRoom()">🚪</button>
                     </div>
                 </div>
-                <div class="small text-muted mt-1 d-md-none">목표 ${state.targetScore}점 · A팀 ${teamA} : ${teamB} B팀</div>
+                <div class="top-bar-roomname">🃏 ${escapeHtml(state.roomName)} #${state.roomId} · 나: ${escapeHtml(NICKNAME)}</div>
             </div>
         `;
     }
 
     function renderStatusBanner() {
         document.getElementById('statusBanner').innerHTML = state.lastMessage
-            ? `<div class="alert alert-light border py-2 mb-2">${escapeHtml(state.lastMessage)}</div>`
+            ? `<div class="status-plain">${escapeHtml(state.lastMessage)}</div>`
             : '';
     }
 
