@@ -96,11 +96,15 @@
         --felt-2: #163d2a;
     }
     /* 페이지 전체가 실제 카드 테이블처럼 초록 펠트 배경으로 가득 차도록.
-       (흰 카드 여러 장이 크림색 배경에 떠있는 느낌이 아니라, 배경 자체가 게임판) */
+       (흰 카드 여러 장이 크림색 배경에 떠있는 느낌이 아니라, 배경 자체가 게임판)
+       스크롤 없이 화면 한 판에 다 들어와야 해서 html/body/컨테이너를 뷰포트
+       높이에 딱 맞춘 flex 세로 배치로 구성함 */
+    html, body { height: 100%; }
     body {
         background: radial-gradient(ellipse at 50% 0%, var(--felt-1) 0%, var(--felt-2) 65%, #0f2a1c 100%);
-        background-attachment: fixed;
         color: #f3faf0;
+        overflow: hidden;
+        margin: 0;
     }
 
     /* 이 페이지 전체 버튼을 알약(pill) 모양으로 */
@@ -108,17 +112,39 @@
     .card { border-radius: 16px; border-color: rgba(0,0,0,0.08); }
     .modal-content { border-radius: 16px; }
 
-    /* 헤더/안내/테이블/손패/채팅을 감싸던 나무 액자를 없애고, 몸 전체의 펠트
-       배경이 그대로 비쳐서 페이지 전체가 하나의 테이블처럼 보이도록 함 */
-    .game-board { background: transparent; border: none; box-shadow: none; padding: 6px 10px 14px; }
-    @@media (max-width: 576px) {
-        .game-board { padding: 4px 6px 10px; }
+    .container-fluid {
+        height: 100vh; height: 100dvh;
+        display: flex; flex-direction: column;
     }
+
+    /* 헤더/안내/테이블/손패/채팅을 감싸던 나무 액자를 없애고, 몸 전체의 펠트
+       배경이 그대로 비쳐서 페이지 전체가 하나의 테이블처럼 보이도록 함.
+       #app 자신이 세로 flex라서 안의 5개 구획(헤더/상태/안내/본문/채팅)이
+       화면 높이 안에서 서로 공간을 나눠 쓰고, 넘치면 본문(#phaseArea)만 줄어듦 */
+    .game-board {
+        background: transparent; border: none; box-shadow: none;
+        padding: 6px 10px 8px;
+        flex: 1 1 auto; min-height: 0;
+        display: flex; flex-direction: column;
+    }
+    @@media (max-width: 576px) {
+        .game-board { padding: 4px 6px 6px; }
+    }
+    #roomHeader, #statusBanner, #guideArea, #chatArea { flex: 0 0 auto; }
+    #phaseArea {
+        flex: 1 1 auto; min-height: 0; overflow-y: auto;
+        display: flex; flex-direction: column;
+    }
+    #tableCard { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+    #handCard { flex: 0 0 auto; }
+
     /* 판 안의 각 구획: 자체 박스/테두리/구분선 없이 그냥 펠트 위에 바로 떠있음 */
     .board-section { background: transparent; border: none; box-shadow: none; border-radius: 0; padding: 10px 2px; color: #f3faf0; }
     .board-section h4, .board-section h5, .board-section h6 { color: #f3faf0; }
     .board-section .text-muted { color: rgba(243,250,240,0.72) !important; }
     .board-section .border { border-color: rgba(255,255,255,0.35) !important; }
+    /* 게임판(원탁)을 담는 구획은 남은 세로 공간을 원탁에게 그대로 넘겨줘야 함 */
+    .board-section-table { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 
     /* 접이식(아코디언) 패널: 게임 안내 / 채팅·로그. 데스크톱에서는 항상 펼쳐진 상태로 보여줌.
        판(.game-board) 안에 얹히는 구획이라 불투명한 흰 박스 대신 옅은 반투명 배경만 사용 */
@@ -130,10 +156,10 @@
     .acc > summary::-webkit-details-marker { display: none; }
     .acc > summary .chev { transition: transform 0.15s ease; font-size: 0.8rem; color: #999; }
     .acc[open] > summary .chev { transform: rotate(180deg); }
-    .acc-body { padding: 0 14px 14px; }
+    .acc-body { padding: 0 14px 14px; max-height: 26vh; overflow-y: auto; }
     .acc.always-open > summary { cursor: default; pointer-events: none; }
     .acc.always-open > summary .chev { display: none; }
-    #guideArea, #chatArea { margin: 8px 2px; }
+    #guideArea, #chatArea { margin: 6px 2px; }
 
     /* 플레이어 아바타 (원형 아이콘) */
     .player-avatar {
@@ -144,7 +170,11 @@
     }
     .player-avatar.is-bot { background: linear-gradient(135deg, #d0bfff, #9775fa); }
     .player-avatar.is-me { background: linear-gradient(135deg, #ffd8a8, #ff922b); }
-    @@media (min-width: 1400px) { .player-avatar { width: 62px; height: 62px; font-size: 1.9rem; } }
+    /* 원탁 안 좌석의 아바타는 원탁이 작아지면(container query) 같이 작아짐 */
+    .round-table .player-avatar {
+        width: clamp(28px, 13cqw, 54px); height: clamp(28px, 13cqw, 54px);
+        font-size: clamp(0.9rem, 6cqw, 1.6rem);
+    }
 
     /* 카드 뒷면 바코드 스타일 (남은 카드 수를 한눈에) */
     .cardback-bar {
@@ -186,18 +216,27 @@
     .tichu-card.small-card .card-name { font-size: 0.56rem; }
 
     @@media (min-width: 1400px) {
-        .tichu-card:not(.small-card) { width: 92px; height: 128px; }
-        .tichu-card:not(.small-card) .card-corner { font-size: 1.1rem; }
-        .tichu-card:not(.small-card) .card-suit-big { font-size: 2.7rem; }
-        .tichu-card:not(.small-card).special .card-icon { font-size: 2.3rem; }
-        .tichu-card:not(.small-card).special .card-name { font-size: 0.86rem; }
+        .tichu-card:not(.small-card) { width: 80px; height: 110px; }
+        .tichu-card:not(.small-card) .card-corner { font-size: 1rem; }
+        .tichu-card:not(.small-card) .card-suit-big { font-size: 2.4rem; }
+        .tichu-card:not(.small-card).special .card-icon { font-size: 2rem; }
+        .tichu-card:not(.small-card).special .card-name { font-size: 0.76rem; }
     }
 
-    /* 원탁은 이름 그대로 가로세로 비율이 항상 1:1인 완전한 원이어야 함.
-       aspect-ratio로 폭만 정하면 높이가 자동으로 똑같이 맞춰짐 */
+    /* 원탁 영역: 남은 세로 공간을 전부 차지하고, 그 안에서 원탁을 가운데
+       정렬한다. container query 크기 단위(cqw/cqh)를 쓰면 이 영역의 실제
+       가로/세로 중 더 작은 쪽에 맞춰, 자바스크립트 없이도 "이 공간에 들어가는
+       가장 큰 정사각형(=완전한 원)"을 항상 구할 수 있다 */
+    .round-table-wrap {
+        flex: 1 1 auto; min-height: 0; width: 100%;
+        display: flex; align-items: center; justify-content: center;
+        container-type: size;
+    }
+    /* 원탁은 이름 그대로 가로세로 비율이 항상 1:1인 완전한 원이어야 함 */
     .round-table {
-        position: relative; width: min(88vw, 62vh, 620px); aspect-ratio: 1 / 1;
-        margin: 34px auto 46px;
+        position: relative;
+        width: min(96cqw, 96cqh);
+        aspect-ratio: 1 / 1;
         /* 페이지 배경 자체가 이미 초록 펠트라서, 원탁은 자체 배경/테두리 없이
            좌석을 배치하는 자리(포지셔닝 컨테이너) 역할만 함 */
         background: transparent;
@@ -205,52 +244,33 @@
         box-shadow: none;
     }
     .round-table .center-play { z-index: 1; }
-    @@media (max-width: 576px) { .round-table { width: min(84vw, 54vh, 380px); margin: 28px auto 40px; } }
-    /* PC 큰 화면에서는 레퍼런스처럼 게임판(원탁)을 화면에 크게 채우고
-       아바타/카드 등 요소도 다 같이 크게 키움 ("크게크게 봐야 한다") */
-    @@media (min-width: 1400px) {
-        .round-table { width: min(58vw, 72vh, 900px); margin: 46px auto 60px; }
-    }
 
-    .seat-pos { position: absolute; width: 170px; text-align: center; }
-    .seat-pos.seat-bottom { bottom: -26px; left: 50%; transform: translateX(-50%); }
-    .seat-pos.seat-top { top: -26px; left: 50%; transform: translateX(-50%); }
-    .seat-pos.seat-left { left: -14px; top: 50%; transform: translateY(-50%); }
-    .seat-pos.seat-right { right: -14px; top: 50%; transform: translateY(-50%); }
-    @@media (max-width: 576px) { .seat-pos { width: 132px; } }
-    @@media (min-width: 1400px) { .seat-pos { width: 210px; } }
+    /* 좌석 위치/크기도 원탁 자체 크기(container query 단위)에 비례하게 만들어서,
+       화면이 작아 원탁이 작아져도 좌석끼리 겹치지 않고 같이 줄어들게 함 */
+    .seat-pos { position: absolute; width: 34cqw; min-width: 64px; max-width: 190px; text-align: center; }
+    .seat-pos.seat-bottom { bottom: -7cqh; left: 50%; transform: translateX(-50%); }
+    .seat-pos.seat-top { top: -7cqh; left: 50%; transform: translateX(-50%); }
+    .seat-pos.seat-left { left: -4cqw; top: 50%; transform: translateY(-50%); }
+    .seat-pos.seat-right { right: -4cqw; top: 50%; transform: translateY(-50%); }
 
     /* 플레이어 자리: 펠트 위에 바로 뜨는 반투명 검정 알약 (레퍼런스 스타일) */
-    .player-slot { position: relative; border-radius: 14px; padding: 10px 12px; text-align: center; background: rgba(0,0,0,0.28); backdrop-filter: blur(2px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-size: 0.92rem; color: #f5fbf2; }
+    .player-slot { position: relative; border-radius: 14px; padding: 6px 8px; text-align: center; background: rgba(0,0,0,0.28); backdrop-filter: blur(2px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-size: clamp(0.68rem, 3.4cqw, 0.92rem); color: #f5fbf2; }
     .player-slot.active-turn { outline: 4px solid #ffc107; box-shadow: 0 0 0 5px rgba(255,193,7,0.4); }
     .player-slot.disconnected { opacity: 0.5; }
     .player-slot.me { outline: 3px solid #4dabf7; }
-    .player-slot .slot-sub { font-size: 0.82rem; color: rgba(245,251,242,0.85); margin-top: 2px; }
-    .player-slot .slot-role { font-size: 0.72rem; color: rgba(245,251,242,0.6); margin-top: -2px; }
-    @@media (min-width: 1400px) {
-        .player-slot { padding: 16px 18px; font-size: 1.12rem; border-radius: 18px; }
-        .player-slot .slot-sub { font-size: 1rem; }
-        .player-slot .slot-role { font-size: 0.88rem; }
-    }
+    .player-slot .slot-sub { font-size: 0.88em; color: rgba(245,251,242,0.85); margin-top: 2px; }
+    .player-slot .slot-role { font-size: 0.8em; color: rgba(245,251,242,0.6); margin-top: -2px; }
 
     .center-play {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
         display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; align-items: center;
         max-width: 80%;
     }
-    .center-label {
-        position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
-        color: #eafff2; font-size: 0.85rem; font-weight: 700; white-space: nowrap; text-shadow: 0 1px 3px rgba(0,0,0,0.7);
-    }
-    @@media (max-width: 576px) {
-        /* 좌우 좌석 카드와 겹치는 문제가 있어 모바일에서는 원탁 안 라벨은 숨기고
-           원탁 위에 별도 줄(.center-label-mobile)로 따로 보여준다 */
-        .center-label { display: none; }
-    }
-    .center-label-mobile { display: none; }
-    @@media (max-width: 576px) {
-        .center-label-mobile { display: block; text-align: center; margin-bottom: 6px; }
-    }
+    /* 원탁이 이제 항상 작고 동그란 크기라 원탁 안쪽에 긴 문구를 얹으면
+       좌우 좌석 카드와 겹친다. 그래서 라벨은 항상 원탁 "위"의 별도 줄
+       (.center-label-mobile)로만 보여주고, 원탁 안쪽 라벨은 쓰지 않는다 */
+    .center-label { display: none; }
+    .center-label-mobile { display: block; text-align: center; margin-bottom: 6px; }
 
     .turn-banner {
         text-align: center; font-weight: 800; font-size: 1.15rem; padding: 12px; border-radius: 10px;
@@ -266,9 +286,12 @@
     }
     .exchange-slot-mini:not(.empty) { border-style: solid; border-color: #0d6efd; background: transparent; }
 
-    /* 카드끼리 겹치지 않고 다 보이도록, 줄이 넘치면 자연스럽게 다음 줄로 */
+    /* 카드끼리 겹치지 않고 다 보이도록: 세로로 줄바꿈하면 손패 영역이 너무
+       높아져서(스크롤 없이 화면에 다 들어와야 함) 원탁 공간을 다 먹어버리므로,
+       한 줄로 유지하고 다 안 들어오면 가로로만 스크롤되게 함 */
     .hand-row {
-        display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 10px; padding: 10px 4px 4px;
+        display: flex; flex-wrap: nowrap; align-items: flex-end; gap: 8px 10px; padding: 10px 4px 8px;
+        overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch;
     }
     .hand-row .tichu-card.selected { z-index: 5; }
 
@@ -1005,16 +1028,16 @@
             ? `제출 완료! 다른 플레이어를 기다리는 중 (${state.exchangeSubmittedSeats.length}/4)`
             : '카드를 선택하고 보낼 자리를 눌러 배정하세요';
 
-        const tableHtml = `<div class="board-section">
+        const tableHtml = `<div class="board-section board-section-table">
             <p class="text-muted small mb-1 mt-1">라지 티츄는 교환을 제출하기 전에만 부를 수 있어요.</p>
             <div class="center-label-mobile small fw-bold text-muted">${centerLabel}</div>
-            <div class="round-table">
+            <div class="round-table-wrap"><div class="round-table">
                 ${exchangeSeatSlot(topSeat, 'seat-top', '파트너', submitted)}
                 ${exchangeSeatSlot(leftSeat, 'seat-left', '왼쪽', submitted)}
                 ${exchangeSeatSlot(rightSeat, 'seat-right', '오른쪽', submitted)}
                 <div class="seat-pos seat-bottom"><div class="player-slot me">${avatarHtml({ isBot: false, userId: USER_ID })}<div class="fw-bold">${escapeHtml(NICKNAME)} (나)</div></div></div>
                 <div class="center-play"><div class="center-label">${centerLabel}</div></div>
-            </div>
+            </div></div>
         </div>`;
 
         const handHtml = `<div class="board-section">
@@ -1126,7 +1149,7 @@
         }
 
         const tableHtml = `
-        <div class="board-section">
+        <div class="board-section board-section-table">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="small text-muted">라운드 ${state.roundNumber}</span>
                 <div class="progress" style="width:50%; height:8px;">
@@ -1137,7 +1160,7 @@
             ${turnBanner}
             ${dragonPanel}
             <div class="center-label-mobile small fw-bold text-muted">${centerLabel}</div>
-            <div class="round-table">
+            <div class="round-table-wrap"><div class="round-table">
                 ${seatSlot(topSeat, 'seat-top', '파트너')}
                 ${seatSlot(leftSeat, 'seat-left', '왼쪽')}
                 ${seatSlot(rightSeat, 'seat-right', '오른쪽')}
@@ -1146,7 +1169,7 @@
                     <div class="center-label">${centerLabel}</div>
                     ${lastPlayHtml}
                 </div>
-            </div>
+            </div></div>
         </div>`;
 
         // ---- 낼 수 있는지 미리 확인 (서버가 최종 판단하지만 선제적으로 안내) ----
