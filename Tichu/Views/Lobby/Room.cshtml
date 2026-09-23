@@ -226,7 +226,13 @@
         color: #eafff2; font-size: 0.85rem; font-weight: 700; white-space: nowrap; text-shadow: 0 1px 3px rgba(0,0,0,0.7);
     }
     @@media (max-width: 576px) {
-        .center-label { font-size: 0.68rem; white-space: normal; width: 92px; text-align: center; line-height: 1.25; top: -22px; }
+        /* 좌우 좌석 카드와 겹치는 문제가 있어 모바일에서는 원탁 안 라벨은 숨기고
+           원탁 위에 별도 줄(.center-label-mobile)로 따로 보여준다 */
+        .center-label { display: none; }
+    }
+    .center-label-mobile { display: none; }
+    @@media (max-width: 576px) {
+        .center-label-mobile { display: block; text-align: center; margin-bottom: 6px; }
     }
 
     .turn-banner {
@@ -754,15 +760,18 @@
         const teamB = state.teamScores ? state.teamScores[1] : 0;
         document.getElementById('roomHeader').innerHTML = `
             <div class="card mb-2">
-                <div class="card-body py-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
-                    <h5 class="m-0">🃏🂡 ${escapeHtml(state.roomName)} <span class="text-muted small">#${state.roomId}</span></h5>
-                    <div class="d-flex gap-2 align-items-center flex-wrap">
-                        <span class="badge text-bg-secondary rounded-pill">목표 ${state.targetScore}점</span>
-                        <span class="badge text-bg-info rounded-pill">A팀 ${teamA} : ${teamB} B팀</span>
-                        <span class="badge text-bg-light text-dark border rounded-pill">👤 나: ${escapeHtml(NICKNAME)}</span>
-                        <button class="btn btn-sm btn-outline-secondary" title="게임 규칙 도움말" data-bs-toggle="modal" data-bs-target="#helpModal">⚙️</button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="leaveRoom()">🚪 나가기</button>
+                <div class="card-body py-2">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <h5 class="m-0">🃏 ${escapeHtml(state.roomName)} <span class="text-muted small">#${state.roomId}</span></h5>
+                        <div class="d-flex gap-2 align-items-center flex-wrap">
+                            <span class="badge text-bg-secondary rounded-pill d-none d-md-inline-flex">목표 ${state.targetScore}점</span>
+                            <span class="badge text-bg-info rounded-pill d-none d-md-inline-flex">A팀 ${teamA} : ${teamB} B팀</span>
+                            <span class="badge text-bg-light text-dark border rounded-pill">👤 나: ${escapeHtml(NICKNAME)}</span>
+                            <button class="btn btn-sm btn-outline-secondary" title="게임 규칙 도움말" data-bs-toggle="modal" data-bs-target="#helpModal">⚙️</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="leaveRoom()">🚪 나가기</button>
+                        </div>
                     </div>
+                    <div class="small text-muted mt-1 d-md-none">목표 ${state.targetScore}점 · A팀 ${teamA} : ${teamB} B팀</div>
                 </div>
             </div>
         `;
@@ -994,6 +1003,7 @@
         const tableHtml = `<div class="card mb-2">
             <div class="card-body p-2">
                 <p class="text-muted small mb-1 mt-1">라지 티츄는 교환을 제출하기 전에만 부를 수 있어요.</p>
+                <div class="center-label-mobile small fw-bold text-muted">${centerLabel}</div>
                 <div class="round-table">
                     ${exchangeSeatSlot(topSeat, 'seat-top', '파트너', submitted)}
                     ${exchangeSeatSlot(leftSeat, 'seat-left', '왼쪽', submitted)}
@@ -1126,6 +1136,7 @@
                 ${wishBanner}
                 ${turnBanner}
                 ${dragonPanel}
+                <div class="center-label-mobile small fw-bold text-muted">${centerLabel}</div>
                 <div class="round-table">
                     ${seatSlot(topSeat, 'seat-top', '파트너')}
                     ${seatSlot(leftSeat, 'seat-left', '왼쪽')}
