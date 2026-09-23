@@ -191,12 +191,12 @@
         .tichu-card:not(.small-card) .card-suit-big { font-size: 2.7rem; }
         .tichu-card:not(.small-card).special .card-icon { font-size: 2.3rem; }
         .tichu-card:not(.small-card).special .card-name { font-size: 0.86rem; }
-        .hand-row .tichu-card { margin-left: -32px; }
-        .hand-row .tichu-card:first-child { margin-left: 0; }
     }
 
+    /* 원탁은 이름 그대로 가로세로 비율이 항상 1:1인 완전한 원이어야 함.
+       aspect-ratio로 폭만 정하면 높이가 자동으로 똑같이 맞춰짐 */
     .round-table {
-        position: relative; width: 100%; max-width: min(94vw, 1700px); height: 460px;
+        position: relative; width: min(88vw, 62vh, 620px); aspect-ratio: 1 / 1;
         margin: 34px auto 46px;
         /* 페이지 배경 자체가 이미 초록 펠트라서, 원탁은 자체 배경/테두리 없이
            좌석을 배치하는 자리(포지셔닝 컨테이너) 역할만 함 */
@@ -205,11 +205,11 @@
         box-shadow: none;
     }
     .round-table .center-play { z-index: 1; }
-    @@media (max-width: 576px) { .round-table { height: 360px; margin: 28px auto 40px; } }
-    /* PC 큰 화면에서는 레퍼런스처럼 좌석을 화면 전체에 널찍하게 펼치고
+    @@media (max-width: 576px) { .round-table { width: min(84vw, 54vh, 380px); margin: 28px auto 40px; } }
+    /* PC 큰 화면에서는 레퍼런스처럼 게임판(원탁)을 화면에 크게 채우고
        아바타/카드 등 요소도 다 같이 크게 키움 ("크게크게 봐야 한다") */
     @@media (min-width: 1400px) {
-        .round-table { height: 560px; margin: 46px auto 60px; }
+        .round-table { width: min(58vw, 72vh, 900px); margin: 46px auto 60px; }
     }
 
     .seat-pos { position: absolute; width: 170px; text-align: center; }
@@ -266,17 +266,11 @@
     }
     .exchange-slot-mini:not(.empty) { border-style: solid; border-color: #0d6efd; background: transparent; }
 
+    /* 카드끼리 겹치지 않고 다 보이도록, 줄이 넘치면 자연스럽게 다음 줄로 */
     .hand-row {
-        display: flex; flex-wrap: nowrap; align-items: flex-end; padding: 10px 4px 4px;
+        display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 10px; padding: 10px 4px 4px;
     }
-    .hand-row .tichu-card { margin-left: -28px; }
-    .hand-row .tichu-card:first-child { margin-left: 0; }
     .hand-row .tichu-card.selected { z-index: 5; }
-    @@media (max-width: 576px) {
-        .hand-row { flex-wrap: wrap; row-gap: 16px; }
-        .hand-row .tichu-card { margin-left: -30px; }
-        .hand-row .tichu-card:first-child { margin-left: 0; }
-    }
 
     @@keyframes playDrop {
         from { opacity: 0; }
@@ -924,23 +918,21 @@
     }
 
     function guideTipsForState() {
-        if (state.status === 'Waiting') {
-            return ['4명이 모두 입장하고 준비를 완료해야 시작할 수 있어요. (0,2번 좌석 = A팀, 1,3번 좌석 = B팀)',
-                '사람이 부족하면 방장이 AI 봇으로 빈 자리를 채울 수 있어요.',
-                '마작을 가진 사람이 매 라운드 첫 트릭을 시작해요. 자세한 규칙은 ⚙️ 버튼을 눌러보세요.'];
-        }
-        if (state.status !== 'Playing') return ['게임이 종료되었습니다. 결과를 확인해보세요.'];
-        if (state.phase === 'Exchange') {
-            return ['카드를 선택한 후 보낼 자리를 눌러 배정하세요.', '총 14장의 카드 중 3장(왼쪽·파트너·오른쪽에 1장씩)을 교환합니다.', '라지 티츄는 교환을 제출하기 전에만 부를 수 있어요.'];
-        }
-        if (state.phase === 'RoundEnd') return ['이번 라운드 결과를 확인하고 다음 라운드를 시작하세요.'];
-        return ['내 차례에는 이전 패보다 센 같은 종류의 조합을 내거나 패스하세요.', '테이블이 비어있을 땐 아무 조합이나 자유롭게 낼 수 있어요.'];
+        return ['4명이 모두 입장하고 준비를 완료해야 시작할 수 있어요. (0,2번 좌석 = A팀, 1,3번 좌석 = B팀)',
+            '사람이 부족하면 방장이 AI 봇으로 빈 자리를 채울 수 있어요.',
+            '마작을 가진 사람이 매 라운드 첫 트릭을 시작해요. 자세한 규칙은 ⚙️ 버튼을 눌러보세요.'];
     }
 
-    // 게임 안내(짧은 컨텍스트 팁): PC에서는 항상 펼쳐진 카드, 모바일에서는 접이식 아코디언
+    // 게임 안내(짧은 컨텍스트 팁): 대기실에서만 보여주고, 게임이 시작되면
+    // 게임판이 화면을 최대한 크게 쓸 수 있도록 안내 영역 자체를 없앤다
     function renderGuideArea() {
         const el = document.getElementById('guideArea');
         if (!el || !state) return;
+
+        if (state.status !== 'Waiting') {
+            el.innerHTML = '';
+            return;
+        }
 
         const existing = document.getElementById('guideAccordion');
         const prevOpen = existing ? existing.open : guideAccOpen;
