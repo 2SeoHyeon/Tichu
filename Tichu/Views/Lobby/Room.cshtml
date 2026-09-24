@@ -1122,9 +1122,9 @@
         </div>`;
 
         const handHtml = `<div class="board-section">
-            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-                <h6 class="m-0">내 손패 (${submitted ? state.myHand.length : handCards.length + '장 남음 / 전체 ' + state.myHand.length}장)</h6>
-                <div class="d-flex gap-2 flex-wrap">
+            <div class="d-flex flex-column align-items-center mb-2 gap-2">
+                <h6 class="m-0 text-center">내 손패 (${submitted ? state.myHand.length : handCards.length + '장 남음 / 전체 ' + state.myHand.length}장)</h6>
+                <div class="d-flex gap-2 flex-wrap justify-content-center">
                     ${tichuBtns}
                     <button class="btn btn-success btn-sm" ${readyToSubmit && !submitted ? '' : 'disabled'} onclick="submitExchange()">📤 교환 제출</button>
                 </div>
@@ -1282,9 +1282,9 @@
 
         const handHtml = `
         <div class="board-section">
-            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-                <h6 class="m-0">내 손패 (${state.myHand.length}장)</h6>
-                <div class="d-flex gap-2 flex-wrap">
+            <div class="d-flex flex-column align-items-center mb-2 gap-2">
+                <h6 class="m-0 text-center">내 손패 (${state.myHand.length}장)</h6>
+                <div class="d-flex gap-2 flex-wrap justify-content-center">
                     ${tichuBtns}
                     <button class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">🔄 선택 초기화</button>
                     <button class="btn btn-sm btn-success" ${myTurn && canPlay ? '' : 'disabled'} onclick="playSelected()">🃏 내기</button>
