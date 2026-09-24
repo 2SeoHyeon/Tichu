@@ -352,8 +352,12 @@
         box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
 
-    #toasts { position: fixed; bottom: 16px; right: 16px; left: 16px; z-index: 2000; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-    .toast-msg { background: #212529; color: #fff; padding: 10px 16px; border-radius: 6px; font-size: 0.92rem; box-shadow: 0 2px 6px rgba(0,0,0,0.3); max-width: 100%; }
+    /* 토스트 알림이 화면 전체 너비(left~right)를 차지하는 투명 컨테이너라서,
+       토스트 글자가 없는 빈 공간까지 클릭을 가로채 그 아래 버튼이 안 눌리는
+       버그가 있었음. 컨테이너 자체는 클릭을 통과시키고, 실제 토스트 말풍선만
+       클릭을 받도록 함 */
+    #toasts { position: fixed; bottom: 16px; right: 16px; left: 16px; z-index: 2000; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
+    .toast-msg { background: #212529; color: #fff; padding: 10px 16px; border-radius: 6px; font-size: 0.92rem; box-shadow: 0 2px 6px rgba(0,0,0,0.3); max-width: 100%; pointer-events: auto; }
 
     .chat-msg-input { font-size: 16px; } /* iOS 자동 확대 방지 (16px 미만이면 포커스시 화면이 확대됨) */
     .toast-tichu { background: linear-gradient(135deg, #dc3545, #f59e0b); font-weight: 800; font-size: 1.1rem; padding: 14px 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
