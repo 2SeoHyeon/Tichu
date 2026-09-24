@@ -607,9 +607,13 @@
         return detectComboRawClient(sorted);
     }
     function isBombClient(t) { return t === 'BombFour' || t === 'BombStraight'; }
-    // 조합의 비교 기준값(최댓값). 불사조가 포함돼 있으면 대신하는 랭크값으로 계산 (서버 ComboMaxValue와 동일)
+    // 조합의 비교 기준값(최댓값). 불사조가 포함돼 있으면 대신하는 랭크값으로 계산 (서버 ComboMaxValue와 동일).
+    // 싱글 불사조(카드 1장)는 여기 해당 안 됨 - detectComboWithPhoenixClient는 "빈 자리를 채워서
+    // 조합 완성" 로직이라, 카드가 1장뿐이면 아무 랭크값이나 넣어도 무조건 'Single'이 성립해서
+    // 제일 낮은 값(2)을 골라버림. 싱글 불사조 자신의 세기는 항상 고정 랭크(15)를 그대로 써야 함
+    // (서버 ComboMaxValue의 "type == Single" 분기와 동일하게 맞춤).
     function comboMaxValueClient(cards) {
-        if (!cards.some(c => c.rank === 'Phoenix')) return Math.max(...cards.map(c => c.rankValue));
+        if (cards.length === 1 || !cards.some(c => c.rank === 'Phoenix')) return Math.max(...cards.map(c => c.rankValue));
         const sorted = [...cards].sort((a, b) => a.rankValue - b.rankValue);
         const { phoenixValue } = detectComboWithPhoenixClient(sorted);
         const nonPhoenixValues = cards.filter(c => c.rank !== 'Phoenix').map(c => c.rankValue);
