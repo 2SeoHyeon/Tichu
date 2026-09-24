@@ -332,6 +332,10 @@
     .hand-row {
         display: flex; flex-wrap: nowrap; align-items: flex-end; gap: 8px 10px; padding: 10px 4px 8px;
         overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch;
+        /* 카드가 다 들어오면 가운데 정렬하되, "safe"를 붙여서 카드가 넘쳐 가로
+           스크롤이 필요한 경우엔 안전하게 왼쪽 정렬로 돌아가게 함 (safe 없이
+           그냥 center만 쓰면 넘친 카드 앞부분이 스크롤해도 안 보이는 버그가 생김) */
+        justify-content: safe center;
     }
     .hand-row .tichu-card.selected { z-index: 5; }
 
