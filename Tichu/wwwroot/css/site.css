@@ -30,7 +30,7 @@ a { color: inherit; }
 .welcome-copy h1 { margin: 19px 0 14px; font-size: clamp(34px, 8vw, 46px); font-weight: 750; line-height: 1.22; letter-spacing: -.055em; }
 .welcome-copy h1 span { color: #c8d9bd; }
 .welcome-copy p { margin: 0; color: #b4c0b8; font-size: 14px; line-height: 1.85; }
-.playing-cards { position: absolute; top: 116px; right: 48px; width: 130px; height: 132px; opacity: .95; }
+.playing-cards { position: absolute; top: 42px; right: 48px; width: 130px; height: 132px; opacity: .95; }
 .playing-card { position: absolute; display: flex; flex-direction: column; justify-content: space-between; width: 67px; height: 94px; padding: 9px; border-radius: 8px; color: #264637; background: #f0eee3; box-shadow: 0 10px 22px rgba(0,0,0,.2); }
 .playing-card span { font-size: 16px; line-height: 1; }
 .playing-card strong { align-self: flex-end; font-family: Georgia, serif; font-size: 22px; line-height: 1; }
@@ -112,7 +112,7 @@ a { color: inherit; }
   .welcome-shell { padding: 22px 14px; }
   .welcome-card { padding: 31px 25px 21px; border-radius: 19px; }
   .welcome-copy { margin-top: 42px; }
-  .playing-cards { top: 107px; right: 23px; transform: scale(.78); transform-origin: top right; }
+  .playing-cards { top: 27px; right: 23px; transform: scale(.78); transform-origin: top right; }
   .welcome-copy h1 { max-width: 250px; font-size: 36px; }
   .welcome-copy p { max-width: 240px; font-size: 12px; }
   .welcome-form-wrap { margin-top: 31px; }
