@@ -4,97 +4,107 @@
     Layout = "_Layout";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="m-0">🃏 Tichu 로비</h3>
-        <div class="d-flex align-items-center gap-2">
-            <a href="/Home/MyPage" class="badge bg-info text-dark text-decoration-none" title="마이페이지">나: @Model.Nickname</a>
-            <a href="/Lobby/Create" class="btn btn-primary">방 만들기</a>
+<div class="lobby-page">
+    <header class="lobby-nav">
+        <a class="brand-lockup" href="/" aria-label="Tichu 홈"><span class="brand-mark">T</span><span class="brand-name">TICHU<span class="brand-dot">.</span>BE</span></a>
+        <div class="lobby-nav-actions">
+            <a href="/Home/MyPage" class="player-chip"><span class="player-avatar">@Model.Nickname.Substring(0, 1)</span><span><small>PLAYING AS</small><strong>@Model.Nickname</strong></span></a>
+            <a href="/Lobby/Create" class="create-room-button"><span>＋</span> 방 만들기</a>
         </div>
-    </div>
+    </header>
 
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger">@TempData["Error"]</div>
-    }
+    <main class="lobby-main">
+        <div class="lobby-heading-row">
+            <div>
+                <p class="eyebrow">FIND YOUR TABLE</p>
+                <h1>오늘은 어떤 <span>한 판</span>을 둘까요?</h1>
+                <p class="lobby-subtitle">친구와 방을 만들거나, 열려 있는 테이블에 합류하세요.</p>
+            </div>
+            <div class="lobby-score-card"><span class="score-card-icon">♧</span><span><small>CLASSIC TEAM PLAY</small><strong>파트너는 맞은편 자리</strong></span></div>
+        </div>
 
-    <div id="emptyMsg" class="text-muted text-center py-5" style="display:none;">아직 생성된 방이 없습니다. 첫 방을 만들어보세요!</div>
+        @if (TempData["Error"] != null)
+        {
+            <div class="entry-error" role="alert">@TempData["Error"]</div>
+        }
 
-    <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>방 이름</th>
-                    <th>목표 점수</th>
-                    <th>턴 시간</th>
-                    <th>인원</th>
-                    <th>상태</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody id="roomList"></tbody>
-        </table>
-    </div>
+        <section class="room-section" aria-labelledby="room-heading">
+            <div class="room-section-heading">
+                <div><span class="online-dot"></span><h2 id="room-heading">열려 있는 테이블</h2><span class="live-tag">LIVE</span></div>
+                <span id="roomCount" class="room-count">방 목록을 불러오는 중</span>
+            </div>
+
+            <div id="emptyMsg" class="empty-rooms" style="display:none;">
+                <div class="empty-deck" aria-hidden="true"><span>♠</span><span>♦</span><span>♧</span></div>
+                <h3>아직 열린 테이블이 없어요.</h3>
+                <p>먼저 방을 만들고 파트너와 친구를 초대해 보세요.</p>
+                <a href="/Lobby/Create" class="create-room-button">첫 방 만들기 <span>→</span></a>
+            </div>
+
+            <div id="roomList" class="room-grid"></div>
+        </section>
+    </main>
+    <footer class="site-footer"><span>TICHU<span class="brand-dot">.</span>BE</span><a href="/Home/ChangeNickname">닉네임 바꾸기</a><span>좋은 한 판은 좋은 파트너와 함께.</span></footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
 <script>
-    const statusLabel = { Waiting: '대기중', Playing: '게임중', Ended: '종료' };
-    const statusBadge = { Waiting: 'bg-success text-white', Playing: 'bg-warning text-dark', Ended: 'bg-secondary text-white' };
+    const statusLabel = { Waiting: '대기 중', Playing: '게임 중', Ended: '종료' };
 
     function renderRooms(rooms) {
-        const tbody = document.getElementById('roomList');
+        const roomList = document.getElementById('roomList');
         const emptyMsg = document.getElementById('emptyMsg');
-        tbody.innerHTML = '';
+        const roomCount = document.getElementById('roomCount');
+        roomList.innerHTML = '';
 
         if (!rooms || rooms.length === 0) {
             emptyMsg.style.display = '';
+            roomCount.textContent = '현재 0개의 방';
             return;
         }
         emptyMsg.style.display = 'none';
+        roomCount.textContent = `현재 ${rooms.length}개의 방`;
 
-        rooms.forEach(r => {
-            const tr = document.createElement('tr');
+        rooms.forEach((r, index) => {
             const canJoin = r.status === 'Waiting' && r.playerCount < 4;
-            tr.innerHTML = `
-                <td>${escapeHtml(r.name)}</td>
-                <td>${r.targetScore}점</td>
-                <td>${r.turnTimeLimit}초</td>
-                <td>${r.playerCount} / 4</td>
-                <td><span class="badge ${statusBadge[r.status] || 'bg-secondary text-white'}">${statusLabel[r.status] || r.status}</span></td>
-                <td class="text-end">
-                    ${canJoin
-                        ? `<a href="/Lobby/Room/${r.id}" class="btn btn-sm btn-primary">입장</a>`
-                        : `<button class="btn btn-sm btn-outline-secondary" disabled>입장 불가</button>`}
-                </td>`;
-            tbody.appendChild(tr);
+            const card = document.createElement('article');
+            card.className = 'room-card';
+            const seats = Array.from({ length: 4 }, (_, i) => `<span class="seat-dot ${i < r.playerCount ? 'seat-filled' : ''}"></span>`).join('');
+            card.innerHTML = `
+                <div class="room-card-top"><span class="room-index">TABLE ${String(index + 1).padStart(2, '0')}</span><span class="room-status ${r.status === 'Waiting' ? 'status-waiting' : 'status-playing'}"><i></i>${statusLabel[r.status] || escapeHtml(r.status)}</span></div>
+                <h3>${escapeHtml(r.name)}</h3>
+                <div class="room-seats">${seats}<span>${r.playerCount} / 4명</span></div>
+                <div class="room-details"><span>목표 점수 <b>${r.targetScore}</b></span><span>턴 제한 <b>${r.turnTimeLimit}초</b></span></div>
+                ${canJoin ? `<a href="/Lobby/Room/${encodeURIComponent(r.id)}" class="room-join-button">테이블 합류 <span>→</span></a>` : `<button class="room-join-button room-join-disabled" disabled>참여할 수 없음</button>`}`;
+            roomList.appendChild(card);
         });
     }
 
-    function escapeHtml(s) {
+    function escapeHtml(value) {
         const div = document.createElement('div');
-        div.textContent = s ?? '';
+        div.textContent = value ?? '';
         return div.innerHTML;
     }
 
     const connection = new signalR.HubConnectionBuilder()
-        .withUrl("/tichuHub")
+        .withUrl('/tichuHub')
         .withAutomaticReconnect()
         .build();
 
-    connection.on("RoomListUpdated", renderRooms);
+    connection.on('RoomListUpdated', renderRooms);
 
     async function start() {
         try {
             await connection.start();
-            await connection.invoke("JoinLobby");
-        } catch (e) {
-            console.error(e);
+            await connection.invoke('JoinLobby');
+        } catch (error) {
+            console.error(error);
+            document.getElementById('roomCount').textContent = '연결을 다시 시도하고 있어요';
             setTimeout(start, 2000);
         }
     }
 
-    connection.onreconnected(() => connection.invoke("JoinLobby").catch(console.error));
-
+    connection.onreconnected(() => connection.invoke('JoinLobby').catch(console.error));
     start();
 </script>
+
