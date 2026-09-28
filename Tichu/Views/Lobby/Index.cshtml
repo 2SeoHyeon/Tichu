@@ -1,58 +1,51 @@
 @model Tichu.Models.ViewModels.LobbyViewModel
 @{
-    ViewData["Title"] = "게임 로비";
+    ViewData["Title"] = "티츄 로비";
     Layout = "_Layout";
 }
 
-<main class="lobby-shell">
-    <header class="lobby-topbar">
-        <a class="brand-lockup lobby-brand" href="/Lobby" aria-label="티츄 로비 홈"><span class="brand-mark" aria-hidden="true">♣</span><span>TICHU<span class="brand-period">.</span></span></a>
-        <div class="lobby-account">
-            <span class="online-indicator"></span>
-            <span class="account-name">@Model.Nickname</span>
-            <a href="/Home/MyPage" class="account-avatar" title="마이페이지" aria-label="마이페이지">@Model.Nickname.Substring(0, 1)</a>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="m-0">🃏 Tichu 로비</h3>
+        <div class="d-flex align-items-center gap-2">
+            <a href="/Home/MyPage" class="badge bg-info text-dark text-decoration-none" title="마이페이지">나: @Model.Nickname</a>
+            <a href="/Lobby/Create" class="btn btn-primary">방 만들기</a>
         </div>
-    </header>
-
-    <section class="lobby-heading">
-        <div>
-            <span class="eyebrow lobby-eyebrow"><span class="eyebrow-dot"></span> TICHU CLUB</span>
-            <h1>게임 로비</h1>
-            <p>열려 있는 방에 참여하거나, 친구들을 위한 새 게임을 만들어보세요.</p>
-        </div>
-        <a href="/Lobby/Create" class="btn-create-room"><span aria-hidden="true">＋</span> 방 만들기</a>
-    </section>
+    </div>
 
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger" role="alert">@TempData["Error"]</div>
+        <div class="alert alert-danger">@TempData["Error"]</div>
     }
 
-    <section class="rooms-panel">
-        <div class="rooms-panel-head">
-            <div><h2>열려 있는 방</h2><p>지금 바로 시작할 수 있는 게임을 찾아보세요.</p></div>
-            <div class="live-label"><span class="online-indicator"></span> 실시간 업데이트</div>
-        </div>
-        <div id="emptyMsg" class="empty-rooms" style="display:none;">
-            <div class="empty-icon" aria-hidden="true">♧</div>
-            <h3>아직 열린 방이 없어요</h3>
-            <p>첫 번째 방을 만들고 친구들을 초대해보세요.</p>
-            <a href="/Lobby/Create" class="btn-empty-create">새 방 만들기 <span aria-hidden="true">↗</span></a>
-        </div>
-        <div id="roomList" class="room-list" aria-live="polite"></div>
-    </section>
-    <footer class="lobby-footer"><span>좋은 게임은 좋은 사람들과 함께</span><span>♣ &nbsp; TICHU</span></footer>
-</main>
+    <div id="emptyMsg" class="text-muted text-center py-5" style="display:none;">아직 생성된 방이 없습니다. 첫 방을 만들어보세요!</div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>방 이름</th>
+                    <th>목표 점수</th>
+                    <th>턴 시간</th>
+                    <th>인원</th>
+                    <th>상태</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="roomList"></tbody>
+        </table>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
 <script>
-    const statusLabel = { Waiting: '대기 중', Playing: '게임 중', Ended: '종료' };
-    const statusClass = { Waiting: 'room-status-waiting', Playing: 'room-status-playing', Ended: 'room-status-ended' };
+    const statusLabel = { Waiting: '대기중', Playing: '게임중', Ended: '종료' };
+    const statusBadge = { Waiting: 'bg-success text-white', Playing: 'bg-warning text-dark', Ended: 'bg-secondary text-white' };
 
     function renderRooms(rooms) {
-        const list = document.getElementById('roomList');
+        const tbody = document.getElementById('roomList');
         const emptyMsg = document.getElementById('emptyMsg');
-        list.innerHTML = '';
+        tbody.innerHTML = '';
 
         if (!rooms || rooms.length === 0) {
             emptyMsg.style.display = '';
@@ -61,35 +54,26 @@
         emptyMsg.style.display = 'none';
 
         rooms.forEach(r => {
+            const tr = document.createElement('tr');
             const canJoin = r.status === 'Waiting' && r.playerCount < 4;
-            const card = document.createElement('article');
-            card.className = 'room-card';
-            card.innerHTML = `
-                <div class="room-card-main">
-                    <div class="room-icon" aria-hidden="true">♣</div>
-                    <div class="room-title-wrap">
-                        <h3>${escapeHtml(r.name)}</h3>
-                        <span class="room-host">티츄 테이블</span>
-                    </div>
-                    <span class="room-status ${statusClass[r.status] || 'room-status-ended'}"><span></span>${escapeHtml(statusLabel[r.status] || r.status)}</span>
-                </div>
-                <div class="room-card-meta">
-                    <div class="room-meta-item"><span>목표 점수</span><strong>${escapeHtml(r.targetScore)}<small>점</small></strong></div>
-                    <div class="room-meta-item"><span>턴 제한</span><strong>${escapeHtml(r.turnTimeLimit)}<small>초</small></strong></div>
-                    <div class="room-meta-item"><span>참가 인원</span><strong>${escapeHtml(r.playerCount)}<small> / 4명</small></strong><div class="seat-track"><i style="width:${Math.min((Number(r.playerCount) || 0) * 25, 100)}%"></i></div></div>
-                </div>
-                <div class="room-card-action">
+            tr.innerHTML = `
+                <td>${escapeHtml(r.name)}</td>
+                <td>${r.targetScore}점</td>
+                <td>${r.turnTimeLimit}초</td>
+                <td>${r.playerCount} / 4</td>
+                <td><span class="badge ${statusBadge[r.status] || 'bg-secondary text-white'}">${statusLabel[r.status] || r.status}</span></td>
+                <td class="text-end">
                     ${canJoin
-                        ? `<a href="/Lobby/Room/${encodeURIComponent(r.id)}" class="btn-join-room">입장하기 <span aria-hidden="true">→</span></a>`
-                        : `<button class="btn-join-room is-disabled" disabled>입장 불가</button>`}
-                </div>`;
-            list.appendChild(card);
+                        ? `<a href="/Lobby/Room/${r.id}" class="btn btn-sm btn-primary">입장</a>`
+                        : `<button class="btn btn-sm btn-outline-secondary" disabled>입장 불가</button>`}
+                </td>`;
+            tbody.appendChild(tr);
         });
     }
 
-    function escapeHtml(value) {
+    function escapeHtml(s) {
         const div = document.createElement('div');
-        div.textContent = value ?? '';
+        div.textContent = s ?? '';
         return div.innerHTML;
     }
 
@@ -111,5 +95,6 @@
     }
 
     connection.onreconnected(() => connection.invoke("JoinLobby").catch(console.error));
+
     start();
 </script>
