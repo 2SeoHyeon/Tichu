@@ -617,6 +617,93 @@
         .tichu-card.special .card-icon { font-size: 1.2rem; }
         .tichu-card.special .card-name { font-size: .47rem; }
     }
+
+    /* Responsive pass: keep more of the table visible and reduce hand-card footprint. */
+    .tichu-card:not(.small-card) { width: 64px; height: 88px; }
+    .tichu-card.small-card { width: 48px; height: 66px; }
+    .tichu-card:not(.small-card) .card-suit-big { font-size: 1.9rem; }
+    .tichu-card:not(.small-card).special .card-icon { font-size: 1.65rem; }
+    @@media (min-width: 1400px) {
+        .tichu-card:not(.small-card) { width: 70px; height: 96px; }
+    }
+    @@media (max-width: 600px) {
+        .game-board { gap: 3px; padding: 3px 4px 5px; }
+        #phaseArea { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+        .top-bar > .d-flex.justify-content-between.align-items-center { align-items: flex-start !important; }
+        .top-bar-info { min-width: 0; }
+        .top-bar-roomname { max-width: 88vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .board-section { padding: 5px 2px; }
+        .waiting-room-screen { padding: 5px 0; }
+        .waiting-room-heading { gap: 8px; }
+        .waiting-room-heading h2 { font-size: clamp(1rem, 4.5vw, 1.2rem); }
+        .waiting-room-heading > div:first-child > p:last-child { max-width: 72vw; font-size: .62rem; line-height: 1.35; }
+        .waiting-table {
+            min-height: 260px; max-height: 39dvh; padding: 5px;
+            grid-template-columns: minmax(0, 1fr) minmax(48px, .42fr) minmax(0, 1fr);
+            grid-template-rows: minmax(58px, .8fr) minmax(66px, 1fr) minmax(58px, .8fr);
+            gap: 4px; border-radius: 18px;
+        }
+        .waiting-table::before { inset: 28px 4%; }
+        .waiting-seat { min-height: 58px; padding: 5px 6px; }
+        .waiting-seat-open { min-height: 56px; }
+        .waiting-player { gap: 4px; margin: 4px 0 3px; }
+        .waiting-player .player-avatar { width: 23px; height: 23px; font-size: .68rem; }
+        .waiting-player-copy { min-width: 0; }
+        .waiting-player-copy strong { max-width: 68px; font-size: .58rem; }
+        .waiting-seat-top, .ready-state { font-size: .48rem; }
+        .waiting-seat-bottom { font-size: .48rem; }
+        .waiting-table-center { min-height: 64px; padding: 3px; }
+        .waiting-table-center strong { font-size: .52rem; line-height: 1.2; }
+        .waiting-room-footer { gap: 7px; padding: 6px; }
+        .waiting-actions { flex-wrap: wrap; gap: 6px; }
+        .table-action { min-height: 40px !important; padding: 0 10px !important; font-size: .64rem !important; }
+        .round-table { width: min(100cqw, 680px); height: min(78cqh, 390px); }
+        .seat-pos { min-width: 0; }
+        .seat-pos.seat-top, .seat-pos.seat-bottom { width: 36%; }
+        .seat-pos.seat-left, .seat-pos.seat-right { width: 27%; }
+        .seat-pos.seat-left { left: -1%; }
+        .seat-pos.seat-right { right: -1%; }
+        .player-slot { padding: 4px 5px; font-size: .6rem; overflow-wrap: anywhere; }
+        .round-table .player-avatar { width: 26px; height: 26px; font-size: .78rem; }
+        .cardback-fan { transform: scale(.82); transform-origin: top center; margin-bottom: -5px; }
+        .center-play { max-width: 45%; padding: 3px; gap: 2px; }
+        .center-label-mobile { margin: 0 0 4px; }
+        .center-label-mobile .pill-badge { display: inline-block; max-width: 90vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #handCard > .board-section { padding: 4px 5px; }
+        #handCard h6 { font-size: .78rem; }
+        #handCard .d-flex.gap-2.flex-wrap.justify-content-center { gap: 5px !important; }
+        #handCard .btn { min-height: 38px !important; padding: 4px 8px !important; font-size: .62rem !important; }
+        .hand-row { gap: 3px; padding: 5px 2px 3px; scroll-padding-inline: 2px; }
+        .tichu-card:not(.small-card) { width: 38px; height: 54px; border-radius: 6px; }
+        .tichu-card.small-card { width: 30px; height: 42px; border-radius: 5px; }
+        .tichu-card:not(.small-card) .card-corner { top: 3px; left: 3px; font-size: .55rem; }
+        .tichu-card:not(.small-card) .card-suit-big { font-size: 1.05rem; }
+        .tichu-card:not(.small-card).special .card-icon { font-size: 1rem; }
+        .tichu-card:not(.small-card).special .card-name { font-size: .42rem; }
+        .tichu-card.small-card .card-corner { top: 2px; left: 2px; font-size: .48rem; }
+        .tichu-card.small-card .card-suit-big { font-size: .95rem; }
+        .tichu-card.small-card.special .card-icon { font-size: .9rem; }
+        .tichu-card.small-card.special .card-name { font-size: .4rem; }
+        .tichu-card.selected { transform: translateY(-5px); }
+    }
+    @@media (max-width: 380px) {
+        .container-fluid { padding: 3px 4px 5px !important; }
+        .waiting-table { grid-template-columns: minmax(0, 1fr) minmax(40px, .34fr) minmax(0, 1fr); gap: 3px; }
+        .waiting-seat { padding: 4px; }
+        .waiting-player-copy strong { max-width: 58px; }
+        .seat-capacity { min-width: 56px; }
+        .room-rules-summary { gap: 4px; font-size: .52rem; }
+        .tichu-card:not(.small-card) { width: 35px; height: 50px; }
+        .tichu-card.small-card { width: 28px; height: 39px; }
+        .round-table .seat-pos.seat-left, .round-table .seat-pos.seat-right { width: 25%; }
+        .center-play { max-width: 42%; }
+    }
+    @@media (max-height: 700px) and (max-width: 600px) {
+        .waiting-table { min-height: 220px; max-height: 34dvh; }
+        .waiting-room-footer { padding: 4px; }
+        .table-action { min-height: 36px !important; }
+        .round-table { height: min(70cqh, 300px); }
+    }
 </style>
 
 <script>
