@@ -1,108 +1,48 @@
 @{
-    ViewData["Title"] = "Tichu — 파트너와 한 수 앞을 읽다";
+    ViewData["Title"] = "티츄에 오신 것을 환영합니다";
     Layout = "_Layout";
 }
 
-<div class="landing-page">
-    <header class="site-nav">
-        <a class="brand-lockup" href="/" aria-label="Tichu 홈">
-            <span class="brand-mark">T</span>
-            <span class="brand-name">TICHU<span class="brand-dot">.</span>BE</span>
-        </a>
-        <div class="nav-note"><span class="online-dot"></span> 무료 온라인 카드 테이블</div>
-    </header>
+<main class="welcome-shell">
+    <div class="welcome-glow welcome-glow-one"></div>
+    <div class="welcome-glow welcome-glow-two"></div>
+    <section class="welcome-card">
+        <div class="brand-lockup">
+            <span class="brand-mark" aria-hidden="true">♣</span>
+            <span>TICHU<span class="brand-period">.</span></span>
+        </div>
 
-    <main>
-        <section class="hero-section">
-            <div class="hero-copy">
-                <p class="eyebrow">FOUR PLAYERS · TWO TEAMS · ONE TABLE</p>
-                <h1>파트너와 함께,<br /><span>한 수 앞을 읽다.</span></h1>
-                <p class="hero-description">손에 든 카드보다 중요한 건, 함께 앉은 파트너의 다음 수.<br class="desktop-break" /> 티츄의 짜릿한 팀 플레이를 온라인 테이블에서 시작하세요.</p>
+        <div class="welcome-copy">
+            <span class="eyebrow"><span class="eyebrow-dot"></span> 친구들과 함께하는 카드 게임</span>
+            <h1>오늘, 티츄 한 판<br /><span>어때요?</span></h1>
+            <p>닉네임만 정하면 바로 시작할 수 있어요.<br />친구들과 방을 만들고 승부를 겨뤄보세요.</p>
+        </div>
 
-                <div class="entry-panel">
-                    <div class="entry-panel-heading">
-                        <div>
-                            <span class="panel-kicker">WELCOME TO THE TABLE</span>
-                            <h2>닉네임으로 바로 입장</h2>
-                        </div>
-                        <span class="entry-icon" aria-hidden="true">↗</span>
-                    </div>
+        <div class="playing-cards" aria-hidden="true">
+            <div class="playing-card card-one"><span>♠</span><strong>A</strong></div>
+            <div class="playing-card card-two"><span class="suit-red">♥</span><strong class="suit-red">10</strong></div>
+            <div class="playing-card card-three"><span>♣</span><strong>J</strong></div>
+        </div>
 
-                    @if (ViewBag.Error != null)
-                    {
-                        <div class="entry-error" role="alert">@ViewBag.Error</div>
-                    }
-
-                    <form method="post" asp-action="Enter" asp-controller="Home" class="entry-form">
-                        @Html.AntiForgeryToken()
-                        <label for="nickname">테이블에서 사용할 이름</label>
-                        <div class="input-row">
-                            <input id="nickname" name="nickname" maxlength="12" placeholder="예: 카드장인" autofocus required autocomplete="nickname" />
-                            <button type="submit">테이블 입장 <span aria-hidden="true">→</span></button>
-                        </div>
-                        <p class="entry-footnote"><span aria-hidden="true">✦</span> 회원가입 없이 시작할 수 있어요. 닉네임은 12자까지 입력 가능합니다.</p>
-                    </form>
+        <div class="welcome-form-wrap">
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger py-2 mb-3" role="alert">@ViewBag.Error</div>
+            }
+            <form method="post" asp-action="Enter" asp-controller="Home" class="welcome-form">
+                @Html.AntiForgeryToken()
+                <label for="nickname">플레이어 이름</label>
+                <div class="nickname-field">
+                    <span class="nickname-icon" aria-hidden="true">✦</span>
+                    <input id="nickname" name="nickname" maxlength="12" placeholder="닉네임을 입력하세요" autocomplete="nickname" autofocus required />
                 </div>
+                <button type="submit" class="btn-start">
+                    <span>게임 시작하기</span><span aria-hidden="true">↗</span>
+                </button>
+            </form>
+            <p class="form-note"><span aria-hidden="true">✓</span> 회원가입 없이 무료로 즐길 수 있어요</p>
+        </div>
 
-                <div class="hero-proof">
-                    <span><b>4</b>명 실시간 플레이</span>
-                    <i></i>
-                    <span>친구와 방 만들기</span>
-                    <i></i>
-                    <span>AI 봇으로 빈자리 채우기</span>
-                </div>
-            </div>
-
-            <div class="hero-visual" aria-label="티츄 카드 테이블 일러스트">
-                <div class="visual-orbit orbit-one"></div>
-                <div class="visual-orbit orbit-two"></div>
-                <div class="table-stamp">THE<br />TICHU<br />TABLE</div>
-                <div class="playing-card card-back"><span>✦</span><small>TICHU</small></div>
-                <div class="playing-card card-red"><span class="card-suit">♦</span><strong>10</strong><small>JADE</small></div>
-                <div class="playing-card card-ink"><span class="card-suit">♠</span><strong>A</strong><small>SWORD</small></div>
-                <div class="playing-card card-gold"><span class="card-suit">🐉</span><strong>龍</strong><small>DRAGON</small></div>
-                <div class="visual-caption"><span class="caption-line"></span><span>PLAY AS A TEAM</span></div>
-                <div class="visual-spark spark-one">✦</div>
-                <div class="visual-spark spark-two">✧</div>
-            </div>
-        </section>
-
-        <section class="welcome-strip">
-            <div class="strip-label"><span class="strip-star">✦</span> YOUR NEXT GAME</div>
-            <div class="strip-copy"><strong>티츄</strong><span>팀워크와 타이밍이 만드는 2:2 카드 게임</span></div>
-            <div class="strip-meta"><span>4인 플레이</span><span class="meta-separator">·</span><span>한 판 약 30분</span></div>
-            <a href="#nickname" class="strip-link">지금 시작하기 <span aria-hidden="true">↗</span></a>
-        </section>
-
-        <section class="how-section">
-            <div class="section-heading">
-                <p class="eyebrow">A LITTLE STRATEGY. A LOT OF TRUST.</p>
-                <h2>좋은 패는 혼자 만들지 않으니까.</h2>
-                <p>티츄는 카드를 내는 게임이자, 파트너에게 길을 열어주는 게임입니다.</p>
-            </div>
-            <div class="how-grid">
-                <article class="how-card">
-                    <span class="how-number">01</span>
-                    <span class="how-icon">♧</span>
-                    <h3>팀을 읽어요</h3>
-                    <p>맞은편 파트너와 신호를 주고받으며 함께 판을 설계해요.</p>
-                </article>
-                <article class="how-card">
-                    <span class="how-number">02</span>
-                    <span class="how-icon">♢</span>
-                    <h3>타이밍을 잡아요</h3>
-                    <p>티츄 선언 한 번, 폭탄 한 장이 라운드의 흐름을 바꿔요.</p>
-                </article>
-                <article class="how-card">
-                    <span class="how-number">03</span>
-                    <span class="how-icon">♜</span>
-                    <h3>함께 승리해요</h3>
-                    <p>내가 먼저 나가는 것보다 우리 팀의 마지막 한 수가 중요해요.</p>
-                </article>
-            </div>
-        </section>
-    </main>
-
-    <footer class="site-footer"><span>TICHU<span class="brand-dot">.</span>BE</span><span>좋은 한 판은 좋은 파트너와 함께.</span><span>© Tichu</span></footer>
-</div>
-
+        <footer class="welcome-footer"><span>전략과 우정이 만나는 곳</span><span>EST. TICHU NIGHT</span></footer>
+    </section>
+</main>
