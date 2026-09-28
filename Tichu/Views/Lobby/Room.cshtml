@@ -704,6 +704,120 @@
         .table-action { min-height: 36px !important; }
         .round-table { height: min(70cqh, 300px); }
     }
+
+    /* Compact gameplay layout for phones: prioritize the table, cards and visible card counts. */
+    .tichu-card:not(.small-card) { width: 58px; height: 80px; }
+    .tichu-card.small-card { width: 42px; height: 58px; }
+    .tichu-card:not(.small-card) .card-suit-big { font-size: 1.7rem; }
+    @@media (min-width: 1400px) {
+        .tichu-card:not(.small-card) { width: 66px; height: 92px; }
+    }
+    @@media (max-width: 768px) {
+        .container-fluid { padding: 3px 5px 5px !important; }
+        .game-board { gap: 2px; padding: 2px 3px 4px; }
+        #guideArea { display: none !important; }
+        #phaseArea { min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+        .top-bar { padding: 4px 6px 3px; }
+        .top-bar > .d-flex.justify-content-between.align-items-center { gap: 4px !important; }
+        .top-bar-info { min-width: 0; gap: 3px; font-size: clamp(.56rem, 2.2vw, .68rem); }
+        .top-bar-info .fw-bold { white-space: nowrap; }
+        .team-score-pill { padding: 2px 5px; font-size: clamp(.52rem, 2vw, .62rem); white-space: nowrap; }
+        .top-bar .icon-btn { width: 27px; height: 27px; font-size: .72rem; }
+        .top-bar-roomname { display: none; }
+        .status-plain { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; padding: 2px 6px; font-size: .68rem; line-height: 1.25; }
+        #chatArea { margin: 2px 1px; }
+        #chatArea > .acc > summary { min-height: 28px; padding: 3px 8px; font-size: .65rem; }
+        #chatArea .acc-body { max-height: 72px; padding: 0 8px 6px; overflow-y: auto; }
+        #chatBox { height: 42px !important; }
+        .board-section { padding: 3px 1px; }
+        .turn-banner { margin: 2px auto 4px; padding: 4px 8px; font-size: .68rem; }
+        .waiting-room-screen { padding: 3px 0; justify-content: flex-start; }
+        .waiting-room-heading { gap: 5px; margin-bottom: 4px; }
+        .waiting-eyebrow { display: none; }
+        .waiting-room-heading h2 { font-size: clamp(.9rem, 3.8vw, 1.08rem); }
+        .waiting-room-heading > div:first-child > p:last-child { display: none; }
+        .seat-capacity { min-width: 52px; padding: 3px 6px; }
+        .seat-capacity strong { font-size: .9rem; }
+        .seat-capacity span { font-size: .42rem; }
+        .waiting-table {
+            flex: 0 1 auto; min-height: clamp(188px, 28dvh, 236px); max-height: 34dvh;
+            padding: 4px; gap: 3px; border-radius: 16px;
+            grid-template-columns: minmax(0, 1fr) minmax(38px, .34fr) minmax(0, 1fr);
+            grid-template-rows: minmax(50px, .8fr) minmax(58px, 1fr) minmax(50px, .8fr);
+        }
+        .waiting-table::before { inset: 22px 4%; }
+        .waiting-seat, .waiting-seat-open { min-height: 50px; padding: 4px; border-radius: 7px; }
+        .waiting-seat-top, .ready-state, .waiting-seat-bottom { gap: 2px; font-size: .42rem; }
+        .waiting-player { gap: 3px; margin: 3px 0 2px; }
+        .waiting-player .player-avatar { width: 19px; height: 19px; font-size: .58rem; }
+        .waiting-player-copy { min-width: 0; }
+        .waiting-player-copy strong { max-width: 58px; overflow: hidden; font-size: .53rem; text-overflow: ellipsis; white-space: nowrap; }
+        .waiting-player-copy > span, .empty-seat-copy span { font-size: .42rem; }
+        .empty-seat-copy strong { font-size: .53rem; }
+        .empty-seat-mark { font-size: .7rem; }
+        .waiting-table-center { min-height: 52px; padding: 2px; }
+        .table-center-mark { font-size: .8rem; }
+        .waiting-table-center strong { font-size: .44rem; line-height: 1.1; }
+        .waiting-table-center > span:last-child { font-size: .35rem; }
+        .waiting-room-footer { gap: 4px; padding: 4px; }
+        .room-rules-summary { justify-content: center; gap: 5px; font-size: .5rem; }
+        .rules-caption { display: none; }
+        .waiting-actions { flex-wrap: wrap; justify-content: center; gap: 4px; }
+        .table-action { min-height: 34px !important; padding: 0 7px !important; font-size: .54rem !important; }
+        .round-table-wrap { min-height: 0; }
+        .round-table { width: min(100cqw, 540px); height: min(76cqh, 320px); }
+        .seat-pos { min-width: 0; }
+        .seat-pos.seat-top, .seat-pos.seat-bottom { width: 34%; }
+        .seat-pos.seat-left, .seat-pos.seat-right { width: 25%; }
+        .seat-pos.seat-left { left: -1%; }
+        .seat-pos.seat-right { right: -1%; }
+        .player-slot { padding: 3px; border-radius: 7px; font-size: .52rem; overflow-wrap: anywhere; }
+        .round-table .player-avatar { width: 21px; height: 21px; font-size: .66rem; }
+        .player-slot .slot-sub { display: inline-block; margin-top: 2px; padding: 1px 4px; font-size: .55em; white-space: nowrap; }
+        .cardback-fan { width: 42px; height: 20px; margin: 1px auto 0; transform: scale(.72); transform-origin: top center; }
+        .cardback-fan .cb { width: 15px; height: 21px; }
+        .center-play { max-width: 42%; padding: 2px; gap: 1px; }
+        .center-label-mobile { margin: 0 0 3px; }
+        .center-label-mobile .pill-badge { max-width: 92vw; overflow: hidden; padding: 2px 6px; font-size: .48rem; text-overflow: ellipsis; white-space: nowrap; }
+        #handCard > .board-section { padding: 3px 4px; }
+        #handCard h6 { font-size: .68rem; }
+        #handCard .d-flex.gap-2.flex-wrap.justify-content-center { gap: 3px !important; }
+        #handCard .btn { min-height: 32px !important; padding: 3px 6px !important; font-size: .52rem !important; }
+        .hand-row { justify-content: center; gap: 0; padding: 4px 2px 2px; overflow-x: auto; }
+        .hand-row .tichu-card + .tichu-card { margin-left: -17px; }
+        .hand-row .tichu-card { width: clamp(32px, 9.2vw, 38px); height: clamp(45px, 13vw, 54px); border-radius: 5px; }
+        .hand-row .tichu-card .card-corner { top: 2px; left: 3px; font-size: .52rem; }
+        .hand-row .tichu-card .card-suit-big { font-size: 1rem; }
+        .hand-row .tichu-card.special .card-icon { font-size: .9rem; }
+        .hand-row .tichu-card.special .card-name { font-size: .38rem; }
+        .hand-row .tichu-card.selected { z-index: 10; transform: translateY(-4px); }
+        .hand-row .tichu-card:not(:first-child) { scroll-margin-left: 8px; }
+        .tichu-card.small-card { width: 28px; height: 39px; border-radius: 4px; }
+        .tichu-card.small-card .card-corner { top: 2px; left: 2px; font-size: .44rem; }
+        .tichu-card.small-card .card-suit-big { font-size: .8rem; }
+        .tichu-card.small-card.special .card-icon { font-size: .75rem; }
+        .tichu-card.small-card.special .card-name { font-size: .34rem; }
+    }
+    @@media (max-width: 380px) {
+        .waiting-table { grid-template-columns: minmax(0,1fr) minmax(34px,.28fr) minmax(0,1fr); }
+        .waiting-player-copy strong { max-width: 48px; }
+        .table-action { min-height: 32px !important; padding: 0 5px !important; font-size: .49rem !important; }
+        .hand-row .tichu-card + .tichu-card { margin-left: -18px; }
+        .hand-row .tichu-card { width: 32px; height: 45px; }
+        .round-table .seat-pos.seat-left, .round-table .seat-pos.seat-right { width: 23%; }
+        .center-play { max-width: 40%; }
+    }
+    @@media (max-height: 560px) and (max-width: 768px) {
+        body { overflow-y: auto; }
+        .container-fluid { height: auto !important; min-height: 100dvh; }
+        .game-board { min-height: 100dvh; }
+        #phaseArea { flex: 0 0 auto; overflow: visible; }
+        .waiting-table { min-height: 170px; max-height: 42dvh; }
+        .waiting-room-screen { justify-content: flex-start; }
+        .round-table-wrap { min-height: 220px; }
+        .round-table { height: min(58cqh, 230px); }
+        #handCard { padding-bottom: env(safe-area-inset-bottom); }
+    }
 </style>
 
 <script>
