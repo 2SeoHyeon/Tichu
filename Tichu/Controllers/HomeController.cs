@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Tichu.Models;
+using Tichu.Services;
 
 namespace Tichu.Controllers
 {
@@ -8,6 +9,13 @@ namespace Tichu.Controllers
     {
         public const string UidCookie = "tichu_uid";
         public const string NickCookie = "tichu_nick";
+
+        private readonly PlayerStatsService _stats;
+
+        public HomeController(PlayerStatsService stats)
+        {
+            _stats = stats;
+        }
 
         public IActionResult Index()
         {
@@ -53,6 +61,8 @@ namespace Tichu.Controllers
             if (uid == null || nick == null) return RedirectToAction("Index");
 
             ViewBag.Nickname = nick;
+            ViewBag.MyStats = _stats.GetStats(uid);
+            ViewBag.TopPlayers = _stats.GetTopPlayers(5);
             return View();
         }
 

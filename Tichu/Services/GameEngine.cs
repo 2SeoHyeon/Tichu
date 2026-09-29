@@ -10,11 +10,13 @@ namespace Tichu.Services
     {
         private readonly GameService _gameService;
         private readonly TichuRuleEngine _rules;
+        private readonly PlayerStatsService _stats;
 
-        public GameEngine(GameService gameService, TichuRuleEngine rules)
+        public GameEngine(GameService gameService, TichuRuleEngine rules, PlayerStatsService stats)
         {
             _gameService = gameService;
             _rules = rules;
+            _stats = stats;
         }
 
         public string? StartGame(GameRoom room, string requestUserId)
@@ -501,6 +503,15 @@ namespace Tichu.Services
             if (game.TeamScores[0] >= room.TargetScore || game.TeamScores[1] >= room.TargetScore)
             {
                 room.Status = RoomStatus.Ended;
+
+                if (game.TeamScores[0] != game.TeamScores[1])
+                {
+                    int winningTeam = game.TeamScores[0] > game.TeamScores[1] ? 0 : 1;
+                    var results = room.Players
+                        .Where(p => !p.IsBot)
+                        .Select(p => (p.UserId, p.Nickname, won: p.TeamId == winningTeam));
+                    _stats.RecordGameResult(results);
+                }
             }
         }
 
