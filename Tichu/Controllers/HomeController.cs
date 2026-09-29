@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Tichu.Models;
 using Tichu.Services;
@@ -11,10 +12,12 @@ namespace Tichu.Controllers
         public const string NickCookie = "tichu_nick";
 
         private readonly PlayerStatsService _stats;
+        private readonly IConfiguration _config;
 
-        public HomeController(PlayerStatsService stats)
+        public HomeController(PlayerStatsService stats, IConfiguration config)
         {
             _stats = stats;
+            _config = config;
         }
 
         public IActionResult Index()
@@ -24,6 +27,15 @@ namespace Tichu.Controllers
             {
                 return RedirectToAction("Index", "Lobby");
             }
+
+            bool googleEnabled = !string.IsNullOrEmpty(_config["Auth:Google:ClientId"]);
+            bool naverEnabled = !string.IsNullOrEmpty(_config["Auth:Naver:ClientId"]);
+            bool kakaoEnabled = !string.IsNullOrEmpty(_config["Auth:Kakao:ClientId"]);
+            ViewBag.GoogleEnabled = googleEnabled;
+            ViewBag.NaverEnabled = naverEnabled;
+            ViewBag.KakaoEnabled = kakaoEnabled;
+            ViewBag.SocialLoginEnabled = googleEnabled || naverEnabled || kakaoEnabled;
+
             return View();
         }
 
@@ -53,6 +65,13 @@ namespace Tichu.Controllers
             Response.Cookies.Append(NickCookie, nickname, cookieOptions);
 
             return RedirectToAction("Index", "Lobby");
+        }
+
+        [HttpGet]
+        public IActionResult ExternalLogin(string provider)
+        {
+            var props = new AuthenticationProperties { RedirectUri = "/Lobby" };
+            return Challenge(props, provider);
         }
 
         public IActionResult MyPage()

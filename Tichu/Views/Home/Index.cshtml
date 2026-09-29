@@ -41,6 +41,25 @@
                 </button>
             </form>
             <p class="form-note"><span aria-hidden="true">✓</span> 회원가입 없이 무료로 즐길 수 있어요</p>
+
+            @if (ViewBag.SocialLoginEnabled == true)
+            {
+                <div class="social-login-divider"><span>또는</span></div>
+                <div class="social-login-buttons">
+                    @if (ViewBag.GoogleEnabled == true)
+                    {
+                        <a href="/Home/ExternalLogin?provider=Google" class="btn-social btn-social-google">Google로 계속하기</a>
+                    }
+                    @if (ViewBag.NaverEnabled == true)
+                    {
+                        <a href="/Home/ExternalLogin?provider=Naver" class="btn-social btn-social-naver">네이버로 계속하기</a>
+                    }
+                    @if (ViewBag.KakaoEnabled == true)
+                    {
+                        <a href="/Home/ExternalLogin?provider=Kakao" class="btn-social btn-social-kakao">카카오로 계속하기</a>
+                    }
+                </div>
+            }
         </div>
 
         <footer class="welcome-footer"><span>전략과 우정이 만나는 곳</span><span>EST. TICHU NIGHT</span></footer>

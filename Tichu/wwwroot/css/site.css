@@ -50,6 +50,14 @@ a { color: inherit; }
 .btn-start span:last-child { font-size: 18px; }
 .form-note { margin: 14px 0 0; color: #98a99d; font-size: 11px; text-align: center; }
 .form-note span { margin-right: 5px; color: #bdd0a7; }
+.social-login-divider { display: flex; align-items: center; gap: 12px; margin: 22px 0 14px; color: #7c8a80; font-size: 11px; }
+.social-login-divider::before, .social-login-divider::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,.12); }
+.social-login-buttons { display: flex; flex-direction: column; gap: 9px; }
+.btn-social { display: flex; align-items: center; justify-content: center; padding: 13px 17px; border-radius: 11px; font-size: 13px; font-weight: 650; text-decoration: none; transition: transform .2s, filter .2s; }
+.btn-social:hover { transform: translateY(-2px); filter: brightness(1.05); }
+.btn-social-google { color: #3c4043; background: #ffffff; border: 1px solid rgba(0,0,0,.08); }
+.btn-social-naver { color: #ffffff; background: #03c75a; }
+.btn-social-kakao { color: #191600; background: #fee500; }
 .welcome-footer { display: flex; justify-content: space-between; gap: 16px; margin-top: 38px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.1); color: #809187; font-size: 9px; letter-spacing: .1em; }
 
 /* Lobby */
