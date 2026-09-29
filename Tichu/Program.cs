@@ -14,6 +14,7 @@ builder.Services.AddSignalR(options =>
 builder.Services.AddSingleton<RoomService>();
 builder.Services.AddSingleton<GameService>();
 builder.Services.AddSingleton<TichuRuleEngine>();
+builder.Services.AddSingleton<PlayerStatsService>();
 builder.Services.AddSingleton<GameEngine>();
 builder.Services.AddSingleton<TimerService>();
 builder.Services.AddSingleton<RoomBroadcaster>();
