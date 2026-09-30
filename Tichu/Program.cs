@@ -104,7 +104,11 @@ if (!string.IsNullOrEmpty(kakaoClientId))
     authBuilder.AddOAuth("Kakao", "Kakao", options =>
     {
         options.ClientId = kakaoClientId;
-        options.ClientSecret = builder.Configuration["Auth:Kakao:ClientSecret"] ?? "";
+        // 카카오는 "Client Secret" 기능을 켜지 않은 앱이면 실제로는 시크릿이 필요 없지만,
+        // ASP.NET Core의 OAuthOptions.Validate()는 빈 문자열을 허용하지 않아 자리채움 값을 넣는다.
+        options.ClientSecret = builder.Configuration["Auth:Kakao:ClientSecret"] is string s && !string.IsNullOrEmpty(s)
+            ? s
+            : "kakao-oauth-unused";
         options.CallbackPath = "/signin-kakao";
         options.AuthorizationEndpoint = "https://kauth.kakao.com/oauth/authorize";
         options.TokenEndpoint = "https://kauth.kakao.com/oauth/token";
