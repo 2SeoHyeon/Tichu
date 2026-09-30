@@ -1,0 +1,41 @@
+@{
+    ViewData["Title"] = "닉네임 설정";
+    Layout = "_Layout";
+}
+
+<main class="welcome-shell">
+    <div class="welcome-glow welcome-glow-one"></div>
+    <div class="welcome-glow welcome-glow-two"></div>
+    <section class="welcome-card">
+        <div class="brand-lockup">
+            <span class="brand-mark" aria-hidden="true">♣</span>
+            <span>TICHU<span class="brand-period">.</span></span>
+        </div>
+
+        <div class="welcome-copy">
+            <span class="eyebrow"><span class="eyebrow-dot"></span> 환영합니다</span>
+            <h1>닉네임을<br /><span>정해주세요</span></h1>
+            <p>게임에서 다른 플레이어에게 보여질 이름이에요.<br />나중에 마이페이지에서 바꿀 수 있어요.</p>
+        </div>
+
+        <div class="welcome-form-wrap">
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger py-2 mb-3" role="alert">@ViewBag.Error</div>
+            }
+            <form method="post" asp-action="SetupNickname" asp-controller="Home" class="welcome-form">
+                @Html.AntiForgeryToken()
+                <label for="nickname">닉네임</label>
+                <div class="nickname-field">
+                    <span class="nickname-icon" aria-hidden="true">✦</span>
+                    <input id="nickname" name="nickname" maxlength="12" placeholder="닉네임을 입력하세요" autocomplete="nickname" autofocus required />
+                </div>
+                <button type="submit" class="btn-start">
+                    <span>시작하기</span><span aria-hidden="true">↗</span>
+                </button>
+            </form>
+        </div>
+
+        <footer class="welcome-footer"><span>전략과 우정이 만나는 곳</span><span>EST. TICHU NIGHT</span></footer>
+    </section>
+</main>

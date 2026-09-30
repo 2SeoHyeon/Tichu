@@ -13,11 +13,13 @@ namespace Tichu.Controllers
 
         private readonly PlayerStatsService _stats;
         private readonly IConfiguration _config;
+        private readonly AccountService _accounts;
 
-        public HomeController(PlayerStatsService stats, IConfiguration config)
+        public HomeController(PlayerStatsService stats, IConfiguration config, AccountService accounts)
         {
             _stats = stats;
             _config = config;
+            _accounts = accounts;
         }
 
         public IActionResult Index()
@@ -28,6 +30,12 @@ namespace Tichu.Controllers
                 return RedirectToAction("Index", "Lobby");
             }
 
+            SetSocialLoginViewBag();
+            return View();
+        }
+
+        private void SetSocialLoginViewBag()
+        {
             bool googleEnabled = !string.IsNullOrEmpty(_config["Auth:Google:ClientId"]);
             bool naverEnabled = !string.IsNullOrEmpty(_config["Auth:Naver:ClientId"]);
             bool kakaoEnabled = !string.IsNullOrEmpty(_config["Auth:Kakao:ClientId"]);
@@ -35,23 +43,33 @@ namespace Tichu.Controllers
             ViewBag.NaverEnabled = naverEnabled;
             ViewBag.KakaoEnabled = kakaoEnabled;
             ViewBag.SocialLoginEnabled = googleEnabled || naverEnabled || kakaoEnabled;
-
-            return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Enter(string nickname)
+        public IActionResult EmailAuth(string email, string password)
         {
-            nickname = (nickname ?? "").Trim();
-            if (nickname.Length == 0 || nickname.Length > 12)
+            email = (email ?? "").Trim().ToLowerInvariant();
+            if (string.IsNullOrEmpty(email) || !email.Contains('@') || !email.Contains('.'))
             {
-                ViewBag.Error = "닉네임은 1~12자로 입력해주세요.";
+                ViewBag.Error = "올바른 이메일을 입력해주세요.";
+                SetSocialLoginViewBag();
+                return View("Index");
+            }
+            if (string.IsNullOrEmpty(password) || password.Length < 6)
+            {
+                ViewBag.Error = "비밀번호는 6자 이상이어야 합니다.";
+                SetSocialLoginViewBag();
                 return View("Index");
             }
 
-            var (existingUid, _) = ReadIdentity();
-            var uid = existingUid ?? Guid.NewGuid().ToString("N");
+            var (success, uid, nickname, isNewAccount, error) = _accounts.LoginOrRegisterWithEmail(email, password);
+            if (!success)
+            {
+                ViewBag.Error = error;
+                SetSocialLoginViewBag();
+                return View("Index");
+            }
 
             var cookieOptions = new CookieOptions
             {
@@ -60,8 +78,52 @@ namespace Tichu.Controllers
                 SameSite = SameSiteMode.Lax,
                 IsEssential = true
             };
+            Response.Cookies.Append(UidCookie, uid!, cookieOptions);
 
-            Response.Cookies.Append(UidCookie, uid, cookieOptions);
+            if (isNewAccount || string.IsNullOrEmpty(nickname))
+            {
+                return RedirectToAction("SetupNickname");
+            }
+
+            Response.Cookies.Append(NickCookie, nickname!, cookieOptions);
+            return RedirectToAction("Index", "Lobby");
+        }
+
+        [HttpGet]
+        public IActionResult SetupNickname()
+        {
+            var uid = Request.Cookies.TryGetValue(UidCookie, out var u) ? u : null;
+            if (string.IsNullOrWhiteSpace(uid)) return RedirectToAction("Index");
+
+            var (_, nick) = ReadIdentity();
+            if (nick != null) return RedirectToAction("Index", "Lobby");
+
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SetupNickname(string nickname)
+        {
+            var uid = Request.Cookies.TryGetValue(UidCookie, out var u) ? u : null;
+            if (string.IsNullOrWhiteSpace(uid)) return RedirectToAction("Index");
+
+            nickname = (nickname ?? "").Trim();
+            if (nickname.Length == 0 || nickname.Length > 12)
+            {
+                ViewBag.Error = "닉네임은 1~12자로 입력해주세요.";
+                return View();
+            }
+
+            _accounts.SetNickname(uid!, nickname);
+
+            var cookieOptions = new CookieOptions
+            {
+                Expires = DateTimeOffset.UtcNow.AddDays(7),
+                HttpOnly = true,
+                SameSite = SameSiteMode.Lax,
+                IsEssential = true
+            };
             Response.Cookies.Append(NickCookie, nickname, cookieOptions);
 
             return RedirectToAction("Index", "Lobby");

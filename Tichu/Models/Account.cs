@@ -8,6 +8,7 @@ namespace Tichu.Models
         public string Provider { get; set; } = "";
         public string ProviderUserId { get; set; } = "";
         public string Nickname { get; set; } = "";
+        public string? PasswordHash { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime LastLoginAt { get; set; }
     }
