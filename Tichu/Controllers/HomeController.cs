@@ -45,6 +45,12 @@ namespace Tichu.Controllers
             ViewBag.SocialLoginEnabled = googleEnabled || naverEnabled || kakaoEnabled;
         }
 
+        [HttpGet]
+        public IActionResult EmailLogin()
+        {
+            return View();
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult EmailAuth(string email, string password)
@@ -53,22 +59,19 @@ namespace Tichu.Controllers
             if (string.IsNullOrEmpty(email) || !email.Contains('@') || !email.Contains('.'))
             {
                 ViewBag.Error = "올바른 이메일을 입력해주세요.";
-                SetSocialLoginViewBag();
-                return View("Index");
+                return View("EmailLogin");
             }
             if (string.IsNullOrEmpty(password) || password.Length < 6)
             {
                 ViewBag.Error = "비밀번호는 6자 이상이어야 합니다.";
-                SetSocialLoginViewBag();
-                return View("Index");
+                return View("EmailLogin");
             }
 
             var (success, uid, nickname, isNewAccount, error) = _accounts.LoginOrRegisterWithEmail(email, password);
             if (!success)
             {
                 ViewBag.Error = error;
-                SetSocialLoginViewBag();
-                return View("Index");
+                return View("EmailLogin");
             }
 
             var cookieOptions = new CookieOptions
@@ -124,6 +127,40 @@ namespace Tichu.Controllers
                 SameSite = SameSiteMode.Lax,
                 IsEssential = true
             };
+            Response.Cookies.Append(NickCookie, nickname, cookieOptions);
+
+            return RedirectToAction("Index", "Lobby");
+        }
+
+        [HttpGet]
+        public IActionResult Guest()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult GuestEnter(string nickname)
+        {
+            nickname = (nickname ?? "").Trim();
+            if (nickname.Length == 0 || nickname.Length > 12)
+            {
+                ViewBag.Error = "닉네임은 1~12자로 입력해주세요.";
+                return View("Guest");
+            }
+
+            var (existingUid, _) = ReadIdentity();
+            var uid = existingUid ?? Guid.NewGuid().ToString("N");
+
+            var cookieOptions = new CookieOptions
+            {
+                Expires = DateTimeOffset.UtcNow.AddDays(7),
+                HttpOnly = true,
+                SameSite = SameSiteMode.Lax,
+                IsEssential = true
+            };
+
+            Response.Cookies.Append(UidCookie, uid, cookieOptions);
             Response.Cookies.Append(NickCookie, nickname, cookieOptions);
 
             return RedirectToAction("Index", "Lobby");

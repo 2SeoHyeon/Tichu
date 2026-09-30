@@ -55,6 +55,7 @@ a { color: inherit; }
 .social-login-buttons { display: flex; flex-direction: column; gap: 9px; }
 .btn-social { display: flex; align-items: center; justify-content: center; padding: 13px 17px; border-radius: 11px; font-size: 13px; font-weight: 650; text-decoration: none; transition: transform .2s, filter .2s; }
 .btn-social:hover { transform: translateY(-2px); filter: brightness(1.05); }
+.btn-social-email { color: #172820; background: #d3dfc9; }
 .btn-social-google { color: #3c4043; background: #ffffff; border: 1px solid rgba(0,0,0,.08); }
 .btn-social-naver { color: #ffffff; background: #03c75a; }
 .btn-social-kakao { color: #191600; background: #fee500; }
