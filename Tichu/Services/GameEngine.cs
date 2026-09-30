@@ -46,6 +46,30 @@ namespace Tichu.Services
             return null;
         }
 
+        /// <summary>게임이 완전히 끝난 뒤, 같은 방/같은 멤버로 대기실(Waiting)로 돌아간다.</summary>
+        public string? ReturnToWaitingRoom(GameRoom room, string requestUserId)
+        {
+            if (room.Status != RoomStatus.Ended) return "게임이 끝난 방만 대기실로 돌아갈 수 있습니다.";
+            var requester = room.Players.FirstOrDefault(p => p.UserId == requestUserId);
+            if (requester == null || !requester.IsHost) return "방장만 대기실로 돌아갈 수 있습니다.";
+
+            room.Status = RoomStatus.Waiting;
+            room.Game = null;
+
+            foreach (var p in room.Players)
+            {
+                p.IsReady = p.IsBot; // 봇은 항상 준비 완료, 사람은 다시 준비해야 함
+                p.Hand.Clear();
+                p.TichuCall = TichuCallType.None;
+                p.HasActedThisRound = false;
+                p.HasFinishedThisRound = false;
+                p.FinishPosition = -1;
+                p.WonPileScore = 0;
+            }
+
+            return null;
+        }
+
         /// <summary>라운드 종료 화면을 잠깐 보여준 뒤 서버가 자동으로 다음 라운드를 시작할 때 사용 (호스트 확인 없음).</summary>
         public void AdvanceToNextRound(GameRoom room)
         {

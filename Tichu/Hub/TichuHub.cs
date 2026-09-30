@@ -188,6 +188,25 @@ namespace Tichu.Hub
             await RunEngineAction(roomId, room => _engine.StartNextRound(room, userId));
         }
 
+        public async Task ReturnToWaitingRoom(int roomId, string userId)
+        {
+            var room = _roomService.GetRoom(roomId);
+            if (room == null) return;
+
+            string? error;
+            lock (room.Lock) { error = _engine.ReturnToWaitingRoom(room, userId); }
+
+            if (error != null)
+            {
+                await Clients.Caller.SendAsync("ErrorMessage", error);
+                return;
+            }
+
+            _timers.Stop(room.Id);
+            await _broadcaster.BroadcastRoomAsync(room);
+            await _broadcaster.BroadcastLobbyAsync();
+        }
+
         private async Task RunEngineAction(int roomId, Func<GameRoom, string?> action)
         {
             var room = _roomService.GetRoom(roomId);

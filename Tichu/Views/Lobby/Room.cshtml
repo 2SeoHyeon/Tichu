@@ -520,7 +520,7 @@
     .round-table .player-avatar { border: 2px solid #fff8e9; background: linear-gradient(135deg, #eac97f, #b9824d); box-shadow: 0 3px 8px rgba(46,38,24,.2); }
     .round-table .player-avatar.is-bot { background: linear-gradient(135deg, #b5c8ba, #668777); }
     .cardback-fan .cb { border-color: #f3e6cb; background-color: #244a3b; background-image: repeating-linear-gradient(45deg, #244a3b 0 3px, #55715c 3px 4px); box-shadow: 0 2px 5px rgba(26,34,28,.35); }
-    .round-table .center-play { z-index: 4; gap: 5px; max-width: 72%; padding: 10px 15px; border: 1px solid rgba(239,218,174,.25); border-radius: 15px; background: rgba(9,36,27,.40); box-shadow: 0 6px 16px rgba(8,27,21,.20); }
+    .round-table .center-play { z-index: 4; gap: 5px; max-width: 72%; padding: 10px 15px; background: transparent; border: none; box-shadow: none; }
     .center-label-mobile { margin-bottom: 8px; }
     .center-label-mobile .pill-badge { background: #efe3ca; color: #34483b; box-shadow: none; font-size: .68rem; }
     .turn-banner { width: fit-content; max-width: 90%; margin: 5px auto 8px; padding: 7px 16px; border: 1px solid rgba(231,189,112,.26); border-radius: 999px; background: rgba(9,25,22,.58); color: #f1e5c9; font-size: .83rem; }
@@ -1227,6 +1227,7 @@
         render();
     }
     function passTurn() { connection.invoke('Pass', ROOM_ID, USER_ID).catch(console.error); }
+    function returnToWaitingRoom() { connection.invoke('ReturnToWaitingRoom', ROOM_ID, USER_ID).catch(console.error); }
     function giveDragon(seat) { connection.invoke('GiveDragonTrick', ROOM_ID, USER_ID, seat).catch(console.error); }
     function sendChat() {
         const text = chatDraft.trim();
@@ -1777,7 +1778,10 @@
             <h4>🏆 게임 종료</h4>
             <p class="fs-5">${winner} 승리!</p>
             <p class="fw-bold">최종 점수 — A팀 ${state.teamScores[0]} : ${state.teamScores[1]} B팀</p>
-            <a href="/Lobby" class="btn btn-primary mt-2">로비로 돌아가기</a>
+            ${IS_HOST
+                ? `<button class="btn btn-primary mt-2" onclick="returnToWaitingRoom()">대기실로 돌아가기</button>`
+                : `<div class="text-muted mt-2">호스트가 대기실로 돌아가길 기다리는 중...</div>`}
+            <div class="mt-2"><a href="/Lobby" class="btn btn-outline-secondary btn-sm">로비 나가기</a></div>
         </div>`;
     }
 </script>
