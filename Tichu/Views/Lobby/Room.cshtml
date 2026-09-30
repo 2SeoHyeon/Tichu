@@ -364,6 +364,8 @@
 
     .chat-msg-input { font-size: 16px; } /* iOS 자동 확대 방지 (16px 미만이면 포커스시 화면이 확대됨) */
     .toast-tichu { background: linear-gradient(135deg, #dc3545, #f59e0b); font-weight: 800; font-size: 1.1rem; padding: 14px 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+    .toast-roundend { max-width: 320px; line-height: 1.5; }
+    .toast-roundend .small { opacity: .85; }
 
     /* 버튼/카드 등 터치 영역을 넉넉하게 */
     .btn-sm { padding: 0.5rem 1rem; font-size: 0.95rem; min-height: 42px; }
@@ -842,6 +844,7 @@
     let knownTichuCalls = {};
     let lastHandAreaKey = null;    // 손패 영역은 내용이 실제로 바뀔 때만 다시 그려서 깜빡임(호버 등) 방지
     let pendingMahjongPlay = null; // 마작 포함 선택 후 "내기" 눌렀을 때, 소원 선택 UI를 보여주는 동안 대기 중인 카드ID 목록
+    let lastToastedRound = null;   // 라운드 종료 팝업이 이번 라운드에 이미 떴는지 (중복 방지)
     const PLAY_ANIM_DELAY = 0.28; // 초 - 날아가는 카드가 도착할 때쯤 실제 카드가 나타나도록
 
     // ---------- utils ----------
@@ -1225,7 +1228,6 @@
     }
     function passTurn() { connection.invoke('Pass', ROOM_ID, USER_ID).catch(console.error); }
     function giveDragon(seat) { connection.invoke('GiveDragonTrick', ROOM_ID, USER_ID, seat).catch(console.error); }
-    function startNextRound() { connection.invoke('StartNextRound', ROOM_ID, USER_ID).catch(console.error); }
     function sendChat() {
         const text = chatDraft.trim();
         if (!text) return;
@@ -1402,6 +1404,7 @@
         }
         if (state.phase === 'RoundEnd') {
             phaseArea.innerHTML = renderRoundEnd();
+            showRoundEndToastOnce();
             lastHandAreaKey = null;
             return;
         }
@@ -1749,15 +1752,23 @@
     }
 
     function renderRoundEnd() {
-        const last = state.history[state.history.length - 1];
-        return `<div class="board-section">
-            <h5>라운드 ${state.roundNumber} 종료</h5>
-            ${last ? `<p>${escapeHtml(last.note)}</p><p class="small text-muted">이번 라운드: A팀 ${last.team0Gain >= 0 ? '+' : ''}${last.team0Gain}점 / B팀 ${last.team1Gain >= 0 ? '+' : ''}${last.team1Gain}점</p>` : ''}
-            <p class="fw-bold">현재 누적 점수 — A팀 ${state.teamScores[0]} : ${state.teamScores[1]} B팀 (목표 ${state.targetScore}점)</p>
-            ${IS_HOST
-                ? `<button class="btn btn-primary" onclick="startNextRound()">다음 라운드 시작</button>`
-                : `<div class="text-muted">호스트가 다음 라운드를 시작하길 기다리는 중...</div>`}
+        return `<div class="board-section text-center text-muted">
+            <p class="mb-0">라운드 ${state.roundNumber} 종료 — 다음 라운드를 준비하고 있어요...</p>
         </div>`;
+    }
+
+    function showRoundEndToastOnce() {
+        if (lastToastedRound === state.roundNumber) return;
+        lastToastedRound = state.roundNumber;
+
+        const last = state.history[state.history.length - 1];
+        const el = document.createElement('div');
+        el.className = 'toast-msg toast-roundend';
+        el.innerHTML = `<strong>라운드 ${state.roundNumber} 종료</strong>` +
+            (last ? `<div>${escapeHtml(last.note)}</div><div class="small">이번 라운드: A팀 ${last.team0Gain >= 0 ? '+' : ''}${last.team0Gain}점 / B팀 ${last.team1Gain >= 0 ? '+' : ''}${last.team1Gain}점</div>` : '') +
+            `<div class="small">누적 — A팀 ${state.teamScores[0]} : ${state.teamScores[1]} B팀 (목표 ${state.targetScore}점)</div>`;
+        document.getElementById('toasts').appendChild(el);
+        setTimeout(() => el.remove(), 4000);
     }
 
     function renderGameEnd() {

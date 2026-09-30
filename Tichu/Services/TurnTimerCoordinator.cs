@@ -24,9 +24,24 @@ namespace Tichu.Services
             _rules = rules;
         }
 
+        private const int RoundEndDelaySeconds = 4;
+
         public void Schedule(GameRoom room)
         {
             if (TryHandleBotTurn(room)) return;
+
+            bool isRoundEnd;
+            lock (room.Lock)
+            {
+                isRoundEnd = room.Status == RoomStatus.Playing
+                    && room.Game != null
+                    && room.Game.Phase == GamePhase.RoundEnd;
+            }
+            if (isRoundEnd)
+            {
+                ScheduleRoundEndAdvance(room);
+                return;
+            }
 
             bool shouldRun;
             int seat;
@@ -70,6 +85,32 @@ namespace Tichu.Services
                     {
                         await _broadcaster.BroadcastLobbyAsync();
                     }
+                    Schedule(room);
+                }
+            });
+        }
+
+        /// <summary>라운드 종료 화면을 잠깐(4초) 보여준 뒤 서버가 스스로 다음 라운드를 시작한다.</summary>
+        private void ScheduleRoundEndAdvance(GameRoom room)
+        {
+            _ = _timerService.StartTurnTimerAsync(room.Id, RoundEndDelaySeconds, async () =>
+            {
+                bool advanced;
+                lock (room.Lock)
+                {
+                    advanced = room.Status == RoomStatus.Playing
+                        && room.Game != null
+                        && room.Game.Phase == GamePhase.RoundEnd;
+
+                    if (advanced)
+                    {
+                        _engine.AdvanceToNextRound(room);
+                    }
+                }
+
+                if (advanced)
+                {
+                    await _broadcaster.BroadcastRoomAsync(room);
                     Schedule(room);
                 }
             });

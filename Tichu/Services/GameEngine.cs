@@ -46,6 +46,17 @@ namespace Tichu.Services
             return null;
         }
 
+        /// <summary>라운드 종료 화면을 잠깐 보여준 뒤 서버가 자동으로 다음 라운드를 시작할 때 사용 (호스트 확인 없음).</summary>
+        public void AdvanceToNextRound(GameRoom room)
+        {
+            if (room.Game == null) return;
+            if (room.Status != RoomStatus.Playing) return;
+            if (room.Game.Phase != GamePhase.RoundEnd) return;
+
+            room.Game.RoundNumber++;
+            DealNewHand(room);
+        }
+
         private void DealNewHand(GameRoom room)
         {
             var game = room.Game!;
@@ -255,6 +266,20 @@ namespace Tichu.Services
             bool didFinish = CheckFinish(room, player);
             if (game.Phase != GamePhase.Playing) return null; // 라운드 종료됨
 
+            // 이 플레이어를 제외한 나머지 전원이 이미 끝났다면(= 혼자 남아 방금 낸 것),
+            // 더 이상 이 트릭에 응수할 상대가 없으므로 즉시 트릭을 가져가고 새로 리드한다.
+            bool wasAlone = room.Players.Where(p => p.Seat != player.Seat).All(p => p.HasFinishedThisRound);
+            if (wasAlone && !didFinish)
+            {
+                var soloTrickScore = game.CurrentTrickCards.Sum(c => c.ScoreValue);
+                player.WonPileScore += soloTrickScore;
+                game.CurrentTrickCards.Clear();
+                game.LastPlay.Clear();
+                game.PassStreak = 0;
+                game.CurrentTurnSeat = player.Seat;
+                return null;
+            }
+
             game.CurrentTurnSeat = NextActiveSeat(room, player.Seat);
             return null;
         }
@@ -421,7 +446,7 @@ namespace Tichu.Services
                 }
             }
 
-            if (game.FinishedSeatOrder.Count >= 3)
+            if (game.FinishedSeatOrder.Count >= 4)
             {
                 EndRound(room, doubleWinTeam: null);
                 return true;
@@ -458,11 +483,14 @@ namespace Tichu.Services
                 game.CurrentTrickCards.Clear();
                 game.LastPlay.Clear();
 
-                int loserSeat = Enumerable.Range(0, 4).First(s => !game.FinishedSeatOrder.Contains(s));
+                // 4등도 손패를 다 낼 때까지 진행하므로, 이 시점엔 FinishedSeatOrder에 4자리가 모두 채워져 있다.
+                int loserSeat = game.FinishedSeatOrder.Count >= 4
+                    ? game.FinishedSeatOrder[3]
+                    : Enumerable.Range(0, 4).First(s => !game.FinishedSeatOrder.Contains(s));
                 var loser = room.Players.First(p => p.Seat == loserSeat);
                 var firstPlayer = room.Players.First(p => p.Seat == game.FinishedSeatOrder[0]);
 
-                // 남은 손패 점수 -> 상대팀
+                // 남은 손패 점수 -> 상대팀 (4등도 손패를 다 냈다면 0점)
                 int loserHandScore = loser.Hand.Sum(c => c.ScoreValue);
                 int opponentTeam = 1 - loser.TeamId;
                 game.TeamScores[opponentTeam] += loserHandScore;
@@ -475,7 +503,9 @@ namespace Tichu.Services
                 foreach (var p in room.Players)
                     game.TeamScores[p.TeamId] += p.WonPileScore;
 
-                note = $"{loser.Nickname}님이 마지막까지 남았습니다. (손패 {loserHandScore}점 상대팀 획득)";
+                note = loserHandScore > 0
+                    ? $"{loser.Nickname}님이 마지막까지 남았습니다. (손패 {loserHandScore}점 상대팀 획득)"
+                    : $"{loser.Nickname}님이 마지막까지 남았습니다.";
             }
 
             foreach (var p in room.Players)
